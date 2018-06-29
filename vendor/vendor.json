@@ -3,22 +3,70 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "mq7Np3rIjHnE06Of949JjXdU/Rk=",
+			"path": "github.com/btcsuite/btcd/btcec",
+			"revision": "86fed781132ac890ee03e906e4ecd5d6fa180c64",
+			"revisionTime": "2018-05-31T02:59:44Z"
+		},
+		{
+			"checksumSHA1": "H3pCPIvAuuyFfby9puLkZU7Ra2w=",
+			"path": "github.com/ethereum/go-ethereum/common",
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
-			"revision": "eaff89291ce998ba4bf9b9816ca8a15c8b85f440",
-			"revisionTime": "2018-06-21T21:00:43Z"
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
+			"checksumSHA1": "BP3m/oEeoC9ustdCYzAVS/gabqg=",
+			"path": "github.com/ethereum/go-ethereum/common/math",
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
+			"checksumSHA1": "qTpwOUO960liQbndOjEsa+250O0=",
+			"path": "github.com/ethereum/go-ethereum/crypto",
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
+			"checksumSHA1": "rh+7MlXrS29QaJG/YZCAjlR+hxg=",
+			"path": "github.com/ethereum/go-ethereum/crypto/secp256k1",
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
 		},
 		{
 			"checksumSHA1": "pQzUVRi0z/3Z4FpRyExSg1ROLSA=",
 			"path": "github.com/ethereum/go-ethereum/crypto/sha3",
-			"revision": "eaff89291ce998ba4bf9b9816ca8a15c8b85f440",
-			"revisionTime": "2018-06-21T21:00:43Z"
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
 		},
 		{
-			"checksumSHA1": "CEFTYXtWmgSh+3Ik1NmDaJcz4E0=",
+			"checksumSHA1": "z90HAmaR1d3Q71bT3FfCb38aPbw=",
+			"path": "github.com/ethereum/go-ethereum/rlp",
+			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
+			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
+			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
+			"path": "github.com/kr/pretty",
+			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
+			"revisionTime": "2018-05-06T08:33:45Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
+			"checksumSHA1": "9gypWnVZJEaH3jMK9KqOp4xgQD4=",
 			"path": "gopkg.in/check.v1",
-			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
-			"revisionTime": "2016-12-08T18:13:25Z"
+			"revision": "788fd78401277ebd861206a03c884797c6ec5541",
+			"revisionTime": "2018-06-28T17:31:08Z"
 		}
 	],
 	"rootPath": "github.com/zipper-project/z0"
