@@ -24,8 +24,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/crypto"
 	"github.com/zipper-project/z0/utils/rlp"
 )
 
@@ -173,6 +173,28 @@ func (tx *Transaction) Size() common.StorageSize {
 
 	tx.size.Store(common.StorageSize(len(bytes)))
 	return common.StorageSize(len(bytes))
+}
+
+// ChainID returns which chain id this transaction was signed for (if at all)
+func (tx *Transaction) ChainID() *big.Int {
+	return deriveChainID(tx.data.V)
+}
+
+// Protected returns whether the transaction is protected from replay protection.
+func (tx *Transaction) Protected() bool {
+	return isProtectedV(tx.data.V)
+}
+
+// WithSignature returns a new transaction with the given signature.
+// This signature needs to be formatted as described in the yellow paper (v+27).
+func (tx *Transaction) WithSignature(signer Signer, sig []byte) (*Transaction, error) {
+	r, s, v, err := signer.SignatureValues(tx, sig)
+	if err != nil {
+		return nil, err
+	}
+	cpy := &Transaction{data: tx.data}
+	cpy.data.R, cpy.data.S, cpy.data.V = r, s, v
+	return cpy, nil
 }
 
 func isProtectedV(V *big.Int) bool {
