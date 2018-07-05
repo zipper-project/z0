@@ -3,18 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "mq7Np3rIjHnE06Of949JjXdU/Rk=",
-			"path": "github.com/btcsuite/btcd/btcec",
-			"revision": "86fed781132ac890ee03e906e4ecd5d6fa180c64",
-			"revisionTime": "2018-05-31T02:59:44Z"
-		},
-		{
-			"checksumSHA1": "H3pCPIvAuuyFfby9puLkZU7Ra2w=",
-			"path": "github.com/ethereum/go-ethereum/common",
-			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
-			"revisionTime": "2018-06-29T12:15:38Z"
-		},
-		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
@@ -27,12 +15,6 @@
 			"revisionTime": "2018-06-29T12:15:38Z"
 		},
 		{
-			"checksumSHA1": "qTpwOUO960liQbndOjEsa+250O0=",
-			"path": "github.com/ethereum/go-ethereum/crypto",
-			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
-			"revisionTime": "2018-06-29T12:15:38Z"
-		},
-		{
 			"checksumSHA1": "rh+7MlXrS29QaJG/YZCAjlR+hxg=",
 			"path": "github.com/ethereum/go-ethereum/crypto/secp256k1",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
@@ -41,12 +23,6 @@
 		{
 			"checksumSHA1": "pQzUVRi0z/3Z4FpRyExSg1ROLSA=",
 			"path": "github.com/ethereum/go-ethereum/crypto/sha3",
-			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
-			"revisionTime": "2018-06-29T12:15:38Z"
-		},
-		{
-			"checksumSHA1": "z90HAmaR1d3Q71bT3FfCb38aPbw=",
-			"path": "github.com/ethereum/go-ethereum/rlp",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
 			"revisionTime": "2018-06-29T12:15:38Z"
 		},
