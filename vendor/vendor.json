@@ -3,6 +3,18 @@
 	"ignore": "test",
 	"package": [
 		{
+			"path": "github.com/btcsuite/btcd/btcec",
+			"revision": ""
+		},
+		{
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/common",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
@@ -13,6 +25,14 @@
 			"path": "github.com/ethereum/go-ethereum/common/math",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
 			"revisionTime": "2018-06-29T12:15:38Z"
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/core/types",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/crypto",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "rh+7MlXrS29QaJG/YZCAjlR+hxg=",
@@ -27,6 +47,48 @@
 			"revisionTime": "2018-06-29T12:15:38Z"
 		},
 		{
+			"path": "github.com/ethereum/go-ethereum/ethdb",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/log",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/metrics",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/params",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/rlp",
+			"revision": ""
+		},
+		{
+			"path": "github.com/ethereum/go-ethereum/trie",
+			"revision": ""
+		},
+		{
+			"path": "github.com/go-stack/stack",
+			"revision": ""
+		},
+		{
+			"path": "github.com/golang/snappy",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "UquR8kc0nKU285HwLbkievlLQz4=",
+			"path": "github.com/hashicorp/golang-lru",
+			"revision": "0fb14efe8c47ae851c0034ed7a448854d3d34cf3",
+			"revisionTime": "2018-02-01T23:52:37Z"
+		},
+		{
+			"path": "github.com/hashicorp/golang-lru/simplelru",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
 			"path": "github.com/kr/pretty",
 			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
@@ -39,10 +101,62 @@
 			"revisionTime": "2018-05-06T08:24:08Z"
 		},
 		{
+			"path": "github.com/syndtr/goleveldb/leveldb",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/cache",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/comparer",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/errors",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/filter",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/iterator",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/journal",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/memdb",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/opt",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/storage",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/table",
+			"revision": ""
+		},
+		{
+			"path": "github.com/syndtr/goleveldb/leveldb/util",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "9gypWnVZJEaH3jMK9KqOp4xgQD4=",
 			"path": "gopkg.in/check.v1",
 			"revision": "788fd78401277ebd861206a03c884797c6ec5541",
 			"revisionTime": "2018-06-28T17:31:08Z"
+		},
+		{
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/prque",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/zipper-project/z0"
