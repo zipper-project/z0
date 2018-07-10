@@ -17,7 +17,7 @@
 TEST = $(shell go list ./...)
 all:
 	@go install ./cmd/z0
-	go build -o z0 ./cmd/z0/main.go
+	go build ./cmd/z0
 
 run:
 	@./z0
