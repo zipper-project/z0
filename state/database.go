@@ -6,7 +6,7 @@ import (
 
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/zdb"
-	"github.com/zipper-project/z0/trie"
+	"github.com/zipper-project/z0/utils/trie"
 	lru "github.com/hashicorp/golang-lru"
 )
 

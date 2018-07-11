@@ -1,17 +1,21 @@
 package main
 
 import (
-	"github.com/hashicorp/golang-lru"
 	"fmt"
+
+	"github.com/zipper-project/z0/common"
 )
 
-func main() {
-	lmap, _ := lru.New(100)
-	lmap.Add(1, "hello")
-	lmap.Add(2, "world")
+type T struct {
+	v common.Hash
+}
 
-	for _, k := range lmap.Keys() {
-		v, _ := lmap.Get(k)
-		fmt.Println(k, v)
+func main() {
+	t := T{}
+	fmt.Println(t.v[:])
+
+	var a []byte
+	if a == nil{
+		fmt.Println("hello")
 	}
 }
