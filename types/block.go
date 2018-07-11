@@ -102,8 +102,8 @@ func (h *Header) Unmarshal(input []byte) error { return json.Unmarshal(input, h)
 
 // Block represents an entire block in the blockchain.
 type Block struct {
-	header       *Header
-	transactions Transactions
+	Head *Header
+	Txs  Transactions
 
 	// caches
 	hash atomic.Value
@@ -115,31 +115,31 @@ type Block struct {
 
 	// These fields are used by package eth to track
 	// inter-peer block relay.
-	ReceivedAt   time.Time
-	ReceivedFrom interface{}
+	receivedAt   time.Time
+	receivedFrom interface{}
 }
 
-func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.header.Number) }
-func (b *Block) GasLimit() uint64     { return b.header.GasLimit }
-func (b *Block) GasUsed() uint64      { return b.header.GasUsed }
-func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.header.Difficulty) }
-func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.header.Time) }
+func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.Head.Number) }
+func (b *Block) GasLimit() uint64     { return b.Head.GasLimit }
+func (b *Block) GasUsed() uint64      { return b.Head.GasUsed }
+func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.Head.Difficulty) }
+func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.Head.Time) }
 
-func (b *Block) NumberU64() uint64      { return b.header.Number.Uint64() }
-func (b *Block) MixDigest() common.Hash { return b.header.MixDigest }
+func (b *Block) NumberU64() uint64      { return b.Head.Number.Uint64() }
+func (b *Block) MixDigest() common.Hash { return b.Head.MixDigest }
 
-func (b *Block) Nonce() uint64            { return binary.BigEndian.Uint64(b.header.Nonce[:]) }
-func (b *Block) Coinbase() common.Address { return b.header.Coinbase }
-func (b *Block) Root() common.Hash        { return b.header.Root }
-func (b *Block) ParentHash() common.Hash  { return b.header.ParentHash }
-func (b *Block) TxHash() common.Hash      { return b.header.TxHash }
-func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
-func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
-func (b *Block) Header() *Header          { return CopyHeader(b.header) }
+func (b *Block) Nonce() uint64            { return binary.BigEndian.Uint64(b.Head.Nonce[:]) }
+func (b *Block) Coinbase() common.Address { return b.Head.Coinbase }
+func (b *Block) Root() common.Hash        { return b.Head.Root }
+func (b *Block) ParentHash() common.Hash  { return b.Head.ParentHash }
+func (b *Block) TxHash() common.Hash      { return b.Head.TxHash }
+func (b *Block) ReceiptHash() common.Hash { return b.Head.ReceiptHash }
+func (b *Block) Extra() []byte            { return common.CopyBytes(b.Head.Extra) }
+func (b *Block) Header() *Header          { return CopyHeader(b.Head) }
 
 // EncodeRLP serializes b into the Ethereum RLP block format.
 func (b *Block) EncodeRLP() ([]byte, error) {
-	for _, tx := range b.transactions {
+	for _, tx := range b.Txs {
 		tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, false)
 	}
 	return rlp.EncodeToBytes(b)
@@ -150,7 +150,7 @@ func (b *Block) DecodeRLP(input []byte) error {
 	err := rlp.Decode(bytes.NewReader(input), &b)
 	if err == nil {
 		b.size.Store(common.StorageSize(len(input)))
-		for _, tx := range b.transactions {
+		for _, tx := range b.Txs {
 			tx.inputs, tx.outputs = deserialize(tx.data.Inputs, tx.data.Outputs)
 		}
 	}
@@ -163,12 +163,12 @@ func (b *Block) Marshal() ([]byte, error) {
 		Header       *Header
 		Transactions Transactions
 	}
-	for _, tx := range b.transactions {
+	for _, tx := range b.Txs {
 		tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, true)
 	}
 	var block Block
-	block.Header = b.header
-	block.Transactions = b.transactions
+	block.Header = b.Head
+	block.Transactions = b.Txs
 	return json.Marshal(block)
 }
 
