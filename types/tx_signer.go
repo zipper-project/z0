@@ -113,9 +113,9 @@ func (s Signer) Sender(tx *Transaction) (common.Address, error) {
 	if tx.ChainID().Cmp(s.chainID) != 0 {
 		return common.Address{}, ErrInvalidchainID
 	}
-	V := new(big.Int).Sub(tx.data.V, s.chainIDMul)
+	V := new(big.Int).Sub(tx.Data.V, s.chainIDMul)
 	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
+	return recoverPlain(s.Hash(tx), tx.Data.R, tx.Data.S, V, true)
 }
 
 // SignatureValues returns a new transaction with the given signature. This signature
@@ -139,12 +139,12 @@ func (s Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, 
 // It does not uniquely identify the transaction.
 func (s Signer) Hash(tx *Transaction) common.Hash {
 	return rlpHash([]interface{}{
-		tx.data.AccountNonce,
-		tx.data.Price,
-		tx.data.GasLimit,
-		tx.data.Inputs,
-		tx.data.Outputs,
-		tx.data.Payload,
+		tx.Data.AccountNonce,
+		tx.Data.Price,
+		tx.Data.GasLimit,
+		tx.Data.Inputs,
+		tx.Data.Outputs,
+		tx.Data.Payload,
 		s.chainID, uint(0), uint(0),
 	})
 }

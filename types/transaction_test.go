@@ -43,7 +43,7 @@ func TestTransactionEncodeAndDecode(t *testing.T) {
 		newTx := &Transaction{}
 		newTx.DecodeRLP(bytes)
 
-		common.AssertEquals(t, newTx.Data(), testTx.Data())
+		common.AssertEquals(t, newTx.Payload(), testTx.Payload())
 		common.AssertEquals(t, newTx.Gas(), testTx.Gas())
 		common.AssertEquals(t, newTx.GasPrice(), testTx.GasPrice())
 		common.AssertEquals(t, newTx.Nonce(), testTx.Nonce())
