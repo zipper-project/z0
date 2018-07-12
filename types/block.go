@@ -140,7 +140,7 @@ func (b *Block) Header() *Header          { return CopyHeader(b.Head) }
 // EncodeRLP serializes b into the RLP block format.
 func (b *Block) EncodeRLP() ([]byte, error) {
 	for _, tx := range b.Txs {
-		tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, false)
+		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, false)
 	}
 	return rlp.EncodeToBytes(b)
 }
@@ -151,7 +151,7 @@ func (b *Block) DecodeRLP(input []byte) error {
 	if err == nil {
 		b.size.Store(common.StorageSize(len(input)))
 		for _, tx := range b.Txs {
-			tx.inputs, tx.outputs = deserialize(tx.data.Inputs, tx.data.Outputs)
+			tx.Inputs, tx.Outputs = deserialize(tx.Data.Inputs, tx.Data.Outputs)
 		}
 	}
 	return err
@@ -164,12 +164,23 @@ func (b *Block) Marshal() ([]byte, error) {
 		Transactions Transactions
 	}
 	for _, tx := range b.Txs {
-		tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, true)
+		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, true)
 	}
 	var block Block
 	block.Header = b.Head
 	block.Transactions = b.Txs
 	return json.Marshal(block)
+}
+
+// Hash returns the keccak256 hash of b's header.
+// The hash is computed on the first call and cached thereafter.
+func (b *Block) Hash() common.Hash {
+	if hash := b.hash.Load(); hash != nil {
+		return hash.(common.Hash)
+	}
+	v := b.Head.Hash()
+	b.hash.Store(v)
+	return v
 }
 
 // CopyHeader creates a deep copy of a block header to prevent side effects from

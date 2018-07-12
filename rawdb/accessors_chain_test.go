@@ -1,18 +1,18 @@
-// Copyright 2018 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2018 The zipper Authors
+// This file is part of the z0 library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The z0 library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The z0 library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 package rawdb
 
@@ -33,7 +33,10 @@ func TestHeaderStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
 
 	// Create a test header to move around the database and make sure it's really new
-	header := &types.Header{Number: big.NewInt(42), Extra: []byte("test header")}
+	header := &types.Header{
+		Number: big.NewInt(42),
+		Extra:  []byte("test header"),
+	}
 	if entry := ReadHeader(db, header.Hash(), header.Number.Uint64()); entry != nil {
 		t.Fatalf("Non existent header returned: %v", entry)
 	}
@@ -43,6 +46,8 @@ func TestHeaderStorage(t *testing.T) {
 		t.Fatalf("Stored header not found")
 	} else if entry.Hash() != header.Hash() {
 		t.Fatalf("Retrieved header mismatch: have %v, want %v", entry, header)
+	} else {
+		t.Log(string(entry.Extra), entry.Number)
 	}
 	if entry := ReadHeaderRLP(db, header.Hash(), header.Number.Uint64()); entry == nil {
 		t.Fatalf("Stored header RLP not found")
@@ -61,63 +66,25 @@ func TestHeaderStorage(t *testing.T) {
 	}
 }
 
-// Tests block body storage and retrieval operations.
-func TestBodyStorage(t *testing.T) {
-	db := zdb.NewMemDatabase()
-
-	// Create a test body to move around the database and make sure it's really new
-	body := &types.Body{Uncles: []*types.Header{{Extra: []byte("test header")}}}
-
-	hasher := sha3.NewKeccak256()
-	rlp.Encode(hasher, body)
-	hash := common.BytesToHash(hasher.Sum(nil))
-
-	if entry := ReadBody(db, hash, 0); entry != nil {
-		t.Fatalf("Non existent body returned: %v", entry)
-	}
-	// Write and verify the body in the database
-	WriteBody(db, hash, 0, body)
-	if entry := ReadBody(db, hash, 0); entry == nil {
-		t.Fatalf("Stored body not found")
-	} else if types.DeriveSha(types.Transactions(entry.Transactions)) != types.DeriveSha(types.Transactions(body.Transactions)) || types.CalcUncleHash(entry.Uncles) != types.CalcUncleHash(body.Uncles) {
-		t.Fatalf("Retrieved body mismatch: have %v, want %v", entry, body)
-	}
-	if entry := ReadBodyRLP(db, hash, 0); entry == nil {
-		t.Fatalf("Stored body RLP not found")
-	} else {
-		hasher := sha3.NewKeccak256()
-		hasher.Write(entry)
-
-		if calc := common.BytesToHash(hasher.Sum(nil)); calc != hash {
-			t.Fatalf("Retrieved RLP body mismatch: have %v, want %v", entry, body)
-		}
-	}
-	// Delete the body and verify the execution
-	DeleteBody(db, hash, 0)
-	if entry := ReadBody(db, hash, 0); entry != nil {
-		t.Fatalf("Deleted body returned: %v", entry)
-	}
-}
-
 // Tests block storage and retrieval operations.
 func TestBlockStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
 
 	// Create a test block to move around the database and make sure it's really new
-	block := types.NewBlockWithHeader(&types.Header{
+	header := &types.Header{
 		Extra:       []byte("test block"),
-		UncleHash:   types.EmptyUncleHash,
-		TxHash:      types.EmptyRootHash,
-		ReceiptHash: types.EmptyRootHash,
-	})
+		TxHash:      common.BytesToHash([]byte("test txhash")),
+		ReceiptHash: common.BytesToHash([]byte("test rcpthash")),
+		Number:      big.NewInt(1),
+	}
+	block := &types.Block{
+		Head: header,
+	}
 	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Non existent block returned: %v", entry)
 	}
 	if entry := ReadHeader(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Non existent header returned: %v", entry)
-	}
-	if entry := ReadBody(db, block.Hash(), block.NumberU64()); entry != nil {
-		t.Fatalf("Non existent body returned: %v", entry)
 	}
 	// Write and verify the block in the database
 	WriteBlock(db, block)
@@ -131,11 +98,6 @@ func TestBlockStorage(t *testing.T) {
 	} else if entry.Hash() != block.Header().Hash() {
 		t.Fatalf("Retrieved header mismatch: have %v, want %v", entry, block.Header())
 	}
-	if entry := ReadBody(db, block.Hash(), block.NumberU64()); entry == nil {
-		t.Fatalf("Stored body not found")
-	} else if types.DeriveSha(types.Transactions(entry.Transactions)) != types.DeriveSha(block.Transactions()) || types.CalcUncleHash(entry.Uncles) != types.CalcUncleHash(block.Uncles()) {
-		t.Fatalf("Retrieved body mismatch: have %v, want %v", entry, block.Body())
-	}
 	// Delete the block and verify the execution
 	DeleteBlock(db, block.Hash(), block.NumberU64())
 	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
@@ -143,43 +105,6 @@ func TestBlockStorage(t *testing.T) {
 	}
 	if entry := ReadHeader(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Deleted header returned: %v", entry)
-	}
-	if entry := ReadBody(db, block.Hash(), block.NumberU64()); entry != nil {
-		t.Fatalf("Deleted body returned: %v", entry)
-	}
-}
-
-// Tests that partial block contents don't get reassembled into full blocks.
-func TestPartialBlockStorage(t *testing.T) {
-	db := zdb.NewMemDatabase()
-	block := types.NewBlockWithHeader(&types.Header{
-		Extra:       []byte("test block"),
-		UncleHash:   types.EmptyUncleHash,
-		TxHash:      types.EmptyRootHash,
-		ReceiptHash: types.EmptyRootHash,
-	})
-	// Store a header and check that it's not recognized as a block
-	WriteHeader(db, block.Header())
-	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
-		t.Fatalf("Non existent block returned: %v", entry)
-	}
-	DeleteHeader(db, block.Hash(), block.NumberU64())
-
-	// Store a body and check that it's not recognized as a block
-	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
-	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
-		t.Fatalf("Non existent block returned: %v", entry)
-	}
-	DeleteBody(db, block.Hash(), block.NumberU64())
-
-	// Store a header and a body separately and check reassembly
-	WriteHeader(db, block.Header())
-	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
-
-	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry == nil {
-		t.Fatalf("Stored block not found")
-	} else if entry.Hash() != block.Hash() {
-		t.Fatalf("Retrieved block mismatch: have %v, want %v", entry, block)
 	}
 }
 
@@ -233,9 +158,13 @@ func TestCanonicalMappingStorage(t *testing.T) {
 func TestHeadStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
 
-	blockHead := types.NewBlockWithHeader(&types.Header{Extra: []byte("test block header")})
-	blockFull := types.NewBlockWithHeader(&types.Header{Extra: []byte("test block full")})
-	blockFast := types.NewBlockWithHeader(&types.Header{Extra: []byte("test block fast")})
+	blockHead := &types.Block{
+		Head: &types.Header{Extra: []byte("test block header")},
+	}
+	blockFull := &types.Block{Head: &types.Header{Extra: []byte("test block full")},
+	}
+	blockFast := types.Block{Head: &types.Header{Extra: []byte("test block fast")},
+	}
 
 	// Check that no head entries are in a pristine database
 	if entry := ReadHeadHeaderHash(db); entry != (common.Hash{}) {

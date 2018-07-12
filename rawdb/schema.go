@@ -1,18 +1,18 @@
-// Copyright 2018 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2018 The zipper Authors
+// This file is part of the z0 library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The z0 library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The z0 library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package rawdb contains a collection of low level database accessors.
 package rawdb
@@ -21,7 +21,6 @@ import (
 	"encoding/binary"
 
 	"github.com/zipper-project/z0/common"
-	"github.com/ethereum/go-ethereum/metrics"
 )
 
 // The fields below define the low level database schema prefixing.
@@ -47,7 +46,7 @@ var (
 	headerHashSuffix   = []byte("n") // headerPrefix + num (uint64 big endian) + headerHashSuffix -> hash
 	headerNumberPrefix = []byte("H") // headerNumberPrefix + hash -> num (uint64 big endian)
 
-	blockBodyPrefix     = []byte("b") // blockBodyPrefix + num (uint64 big endian) + hash -> block body
+	blockPrefix     = []byte("b") // blockBodyPrefix + num (uint64 big endian) + hash -> block body
 	blockReceiptsPrefix = []byte("r") // blockReceiptsPrefix + num (uint64 big endian) + hash -> block receipts
 
 	txLookupPrefix  = []byte("l") // txLookupPrefix + hash -> transaction/receipt lookup metadata
@@ -58,9 +57,6 @@ var (
 
 	// Chain index prefixes (use `i` + single byte to avoid mixing data types).
 	BloomBitsIndexPrefix = []byte("iB") // BloomBitsIndexPrefix is the data table of a chain indexer to track its progress
-
-	preimageCounter    = metrics.NewRegisteredCounter("db/preimage/total", nil)
-	preimageHitCounter = metrics.NewRegisteredCounter("db/preimage/hits", nil)
 )
 
 // TxLookupEntry is a positional metadata to help looking up the data content of
@@ -99,8 +95,8 @@ func headerNumberKey(hash common.Hash) []byte {
 }
 
 // blockBodyKey = blockBodyPrefix + num (uint64 big endian) + hash
-func blockBodyKey(number uint64, hash common.Hash) []byte {
-	return append(append(blockBodyPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
+func blockKey(number uint64, hash common.Hash) []byte {
+	return append(append(blockPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 }
 
 // blockReceiptsKey = blockReceiptsPrefix + num (uint64 big endian) + hash

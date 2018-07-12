@@ -1,29 +1,31 @@
-// Copyright 2018 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2018 The zipper Authors
+// This file is part of the z0 library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The z0 library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The z0 library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 package rawdb
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/utils/rlp"
 )
+
+type ChainConfigTest struct {
+}
 
 // ReadDatabaseVersion retrieves the version number of the database.
 func ReadDatabaseVersion(db DatabaseReader) int {
@@ -39,35 +41,35 @@ func ReadDatabaseVersion(db DatabaseReader) int {
 func WriteDatabaseVersion(db DatabaseWriter, version int) {
 	enc, _ := rlp.EncodeToBytes(version)
 	if err := db.Put(databaseVerisionKey, enc); err != nil {
-		log.Crit("Failed to store the database version", "err", err)
+		fmt.Println("Failed to store the database version", "err", err)
 	}
 }
 
 // ReadChainConfig retrieves the consensus settings based on the given genesis hash.
-func ReadChainConfig(db DatabaseReader, hash common.Hash) *params.ChainConfig {
+func ReadChainConfig(db DatabaseReader, hash common.Hash) *ChainConfigTest {
 	data, _ := db.Get(configKey(hash))
 	if len(data) == 0 {
 		return nil
 	}
-	var config params.ChainConfig
+	var config ChainConfigTest
 	if err := json.Unmarshal(data, &config); err != nil {
-		log.Error("Invalid chain config JSON", "hash", hash, "err", err)
+		fmt.Println("Invalid chain config JSON", "hash", hash, "err", err)
 		return nil
 	}
 	return &config
 }
 
 // WriteChainConfig writes the chain config settings to the database.
-func WriteChainConfig(db DatabaseWriter, hash common.Hash, cfg *params.ChainConfig) {
+func WriteChainConfig(db DatabaseWriter, hash common.Hash, cfg *ChainConfigTest) {
 	if cfg == nil {
 		return
 	}
 	data, err := json.Marshal(cfg)
 	if err != nil {
-		log.Crit("Failed to JSON encode chain config", "err", err)
+		fmt.Println("Failed to JSON encode chain config", "err", err)
 	}
 	if err := db.Put(configKey(hash), data); err != nil {
-		log.Crit("Failed to store chain config", "err", err)
+		fmt.Println("Failed to store chain config", "err", err)
 	}
 }
 
@@ -82,9 +84,7 @@ func ReadPreimage(db DatabaseReader, hash common.Hash) []byte {
 func WritePreimages(db DatabaseWriter, number uint64, preimages map[common.Hash][]byte) {
 	for hash, preimage := range preimages {
 		if err := db.Put(preimageKey(hash), preimage); err != nil {
-			log.Crit("Failed to store trie preimage", "err", err)
+			fmt.Println("Failed to store trie preimage", "err", err)
 		}
 	}
-	preimageCounter.Inc(int64(len(preimages)))
-	preimageHitCounter.Inc(int64(len(preimages)))
 }

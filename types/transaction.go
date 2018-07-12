@@ -34,9 +34,9 @@ var ErrInvalidSig = errors.New("invalid transaction v, r, s values")
 
 // Transaction represents an entire transaction in the block.
 type Transaction struct {
-	data    txdata
-	inputs  []In
-	outputs []Out
+	Data    txdata
+	Inputs  []In
+	Outputs []Out
 
 	// caches
 	hash atomic.Value
@@ -84,27 +84,27 @@ func newTransaction(nonce uint64, assertID string, gasLimit uint64, gasPrice *bi
 	if gasPrice != nil {
 		d.Price.Set(gasPrice)
 	}
-	return &Transaction{data: d}
+	return &Transaction{Data: d}
 }
 
 // WithInput add transaction input
-func (tx *Transaction) WithInput(inputs []In) { tx.inputs = inputs }
+func (tx *Transaction) WithInput(inputs []In) { tx.Inputs = inputs }
 
 // WithOutput add transaction output
-func (tx *Transaction) WithOutput(outputs []Out) { tx.outputs = outputs }
+func (tx *Transaction) WithOutput(outputs []Out) { tx.Outputs = outputs }
 
 // EncodeRLP implements rlp.Encoder
 func (tx *Transaction) EncodeRLP() ([]byte, error) {
-	tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, false)
-	return rlp.EncodeToBytes(&tx.data)
+	tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, false)
+	return rlp.EncodeToBytes(&tx.Data)
 }
 
 // DecodeRLP implements rlp.Decoder
 func (tx *Transaction) DecodeRLP(data []byte) error {
-	err := rlp.Decode(bytes.NewReader(data), &tx.data)
+	err := rlp.Decode(bytes.NewReader(data), &tx.Data)
 	if err == nil {
 		tx.size.Store(common.StorageSize(len(data)))
-		tx.inputs, tx.outputs = deserialize(tx.data.Inputs, tx.data.Outputs)
+		tx.Inputs, tx.Outputs = deserialize(tx.Data.Inputs, tx.Data.Outputs)
 	}
 	return err
 }
@@ -112,9 +112,9 @@ func (tx *Transaction) DecodeRLP(data []byte) error {
 // MarshalJSON encodes the web3 RPC transaction format.
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	hash := tx.Hash()
-	data := tx.data
+	data := tx.Data
 	data.Hash = &hash
-	tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, true)
+	tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, true)
 	return json.Marshal(&data)
 }
 
@@ -135,7 +135,7 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 		return ErrInvalidSig
 	}
 
-	*tx = Transaction{data: dec}
+	*tx = Transaction{Data: dec}
 	return nil
 }
 
@@ -150,11 +150,11 @@ func (tx *Transaction) Hash() common.Hash {
 	return v
 }
 
-func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
-func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
-func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Price) }
-func (tx *Transaction) Nonce() uint64      { return tx.data.AccountNonce }
-func (tx *Transaction) AssertID() string   { return tx.data.AssertID }
+func (tx *Transaction) Payload() []byte       { return common.CopyBytes(tx.Data.Payload) }
+func (tx *Transaction) Gas() uint64        { return tx.Data.GasLimit }
+func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.Data.Price) }
+func (tx *Transaction) Nonce() uint64      { return tx.Data.AccountNonce }
+func (tx *Transaction) AssertID() string   { return tx.Data.AssertID }
 
 // To returns the recipient address of the transaction.
 // It returns nil if the transaction is a contract creation.
@@ -177,12 +177,12 @@ func (tx *Transaction) Size() common.StorageSize {
 
 // ChainID returns which chain id this transaction was signed for (if at all)
 func (tx *Transaction) ChainID() *big.Int {
-	return deriveChainID(tx.data.V)
+	return deriveChainID(tx.Data.V)
 }
 
 // Protected returns whether the transaction is protected from replay protection.
 func (tx *Transaction) Protected() bool {
-	return isProtectedV(tx.data.V)
+	return isProtectedV(tx.Data.V)
 }
 
 // WithSignature returns a new transaction with the given signature.
@@ -192,8 +192,8 @@ func (tx *Transaction) WithSignature(signer Signer, sig []byte) (*Transaction, e
 	if err != nil {
 		return nil, err
 	}
-	cpy := &Transaction{data: tx.data}
-	cpy.data.R, cpy.data.S, cpy.data.V = r, s, v
+	cpy := &Transaction{Data: tx.Data}
+	cpy.Data.R, cpy.Data.S, cpy.Data.V = r, s, v
 	return cpy, nil
 }
 

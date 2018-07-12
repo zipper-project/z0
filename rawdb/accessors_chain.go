@@ -1,18 +1,18 @@
-// Copyright 2018 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2018 The zipper Authors
+// This file is part of the z0 library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The z0 library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The z0 library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 package rawdb
 
@@ -148,7 +148,7 @@ func ReadHeader(db DatabaseReader, hash common.Hash, number uint64) *types.Heade
 	}
 	header := new(types.Header)
 	if err := rlp.Decode(bytes.NewReader(data), header); err != nil {
-		log.Error("Invalid block header RLP", "hash", hash, "err", err)
+		fmt.Println("Invalid block header RLP", "hash", hash, "err", err)
 		return nil
 	}
 	return header
@@ -189,52 +189,52 @@ func DeleteHeader(db DatabaseDeleter, hash common.Hash, number uint64) {
 }
 
 // ReadBodyRLP retrieves the block body (transactions and uncles) in RLP encoding.
-func ReadBodyRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
-	data, _ := db.Get(blockBodyKey(number, hash))
+func ReadBlockRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
+	data, _ := db.Get(blockKey(number, hash))
 	return data
 }
 
 // WriteBodyRLP stores an RLP encoded block body into the database.
-func WriteBodyRLP(db DatabaseWriter, hash common.Hash, number uint64, rlp rlp.RawValue) {
-	if err := db.Put(blockBodyKey(number, hash), rlp); err != nil {
+func WriteBlockRLP(db DatabaseWriter, hash common.Hash, number uint64, rlp rlp.RawValue) {
+	if err := db.Put(blockKey(number, hash), rlp); err != nil {
 		fmt.Println("Failed to store block body", "err", err)
 	}
 }
 
 // HasBody verifies the existence of a block body corresponding to the hash.
-func HasBody(db DatabaseReader, hash common.Hash, number uint64) bool {
-	if has, err := db.Has(blockBodyKey(number, hash)); !has || err != nil {
+func HasBlock(db DatabaseReader, hash common.Hash, number uint64) bool {
+	if has, err := db.Has(blockKey(number, hash)); !has || err != nil {
 		return false
 	}
 	return true
 }
 
 // ReadBody retrieves the block body corresponding to the hash.
-func ReadBody(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
-	data := ReadBodyRLP(db, hash, number)
+func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
+	data := ReadBlockRLP(db, hash, number)
 	if len(data) == 0 {
 		return nil
 	}
 	block := new(types.Block)
 	if err := rlp.Decode(bytes.NewReader(data), block); err != nil {
-		log.Error("Invalid block body RLP", "hash", hash, "err", err)
+		fmt.Println("Invalid block body RLP", "hash", hash, "err", err)
 		return nil
 	}
 	return block
 }
 
 // WriteBody storea a block body into the database.
-func WriteBody(db DatabaseWriter, hash common.Hash, number uint64, block *types.Block) {
+func WriteBlock(db DatabaseWriter, block *types.Block) {
 	data, err := rlp.EncodeToBytes(block)
 	if err != nil {
 		fmt.Println("Failed to RLP encode body", "err", err)
 	}
-	WriteBodyRLP(db, hash, number, data)
+	WriteBlockRLP(db, block.Hash(), block.NumberU64(), data)
 }
 
 // DeleteBody removes all block body data associated with a hash.
-func DeleteBody(db DatabaseDeleter, hash common.Hash, number uint64) {
-	if err := db.Delete(blockBodyKey(number, hash)); err != nil {
+func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
+	if err := db.Delete(blockKey(number, hash)); err != nil {
 		fmt.Println("Failed to delete block body", "err", err)
 	}
 }
@@ -247,7 +247,7 @@ func ReadTd(db DatabaseReader, hash common.Hash, number uint64) *big.Int {
 	}
 	td := new(big.Int)
 	if err := rlp.Decode(bytes.NewReader(data), td); err != nil {
-		log.Error("Invalid block total difficulty RLP", "hash", hash, "err", err)
+		fmt.Println("Invalid block total difficulty RLP", "hash", hash, "err", err)
 		return nil
 	}
 	return td
@@ -279,9 +279,9 @@ func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Rece
 		return nil
 	}
 	// Convert the revceipts from their storage form to their internal representation
-	storageReceipts := []*types.ReceiptForStorage{}
+	storageReceipts := []*types.Receipt{}
 	if err := rlp.DecodeBytes(data, &storageReceipts); err != nil {
-		log.Error("Invalid receipt array RLP", "hash", hash, "err", err)
+		fmt.Println("Invalid receipt array RLP", "hash", hash, "err", err)
 		return nil
 	}
 	receipts := make(types.Receipts, len(storageReceipts))
@@ -294,9 +294,9 @@ func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Rece
 // WriteReceipts stores all the transaction receipts belonging to a block.
 func WriteReceipts(db DatabaseWriter, hash common.Hash, number uint64, receipts types.Receipts) {
 	// Convert the receipts into their storage form and serialize them
-	storageReceipts := make([]*types.ReceiptForStorage, len(receipts))
+	storageReceipts := make([]*types.Receipt, len(receipts))
 	for i, receipt := range receipts {
-		storageReceipts[i] = (*types.ReceiptForStorage)(receipt)
+		storageReceipts[i] = (*types.Receipt)(receipt)
 	}
 	bytes, err := rlp.EncodeToBytes(storageReceipts)
 	if err != nil {
@@ -313,38 +313,6 @@ func DeleteReceipts(db DatabaseDeleter, hash common.Hash, number uint64) {
 	if err := db.Delete(blockReceiptsKey(number, hash)); err != nil {
 		fmt.Println("Failed to delete block receipts", "err", err)
 	}
-}
-
-// ReadBlock retrieves an entire block corresponding to the hash, assembling it
-// back from the stored header and body. If either the header or body could not
-// be retrieved nil is returned.
-//
-// Note, due to concurrent download of header and block body the header and thus
-// canonical hash can be stored in the database but the body data not (yet).
-func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
-	header := ReadHeader(db, hash, number)
-	if header == nil {
-		return nil
-	}
-	body := ReadBody(db, hash, number)
-	if body == nil {
-		return nil
-	}
-	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Uncles)
-}
-
-// WriteBlock serializes a block into the database, header and body separately.
-func WriteBlock(db DatabaseWriter, block *types.Block) {
-	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
-	WriteHeader(db, block.Header())
-}
-
-// DeleteBlock removes all block data associated with a hash.
-func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
-	DeleteReceipts(db, hash, number)
-	DeleteHeader(db, hash, number)
-	DeleteBody(db, hash, number)
-	DeleteTd(db, hash, number)
 }
 
 // FindCommonAncestor returns the last common ancestor of two block headers

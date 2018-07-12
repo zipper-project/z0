@@ -39,8 +39,8 @@ var (
 		Nonce:      EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 	b = &Block{
-		header:       th,
-		transactions: []*Transaction{testTx},
+		Head: th,
+		Txs:  []*Transaction{testTx},
 	}
 )
 
