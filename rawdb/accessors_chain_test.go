@@ -23,9 +23,9 @@ import (
 
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/types"
-	"github.com/zipper-project/z0/crypto/sha3"
 	"github.com/zipper-project/z0/zdb"
 	"github.com/zipper-project/z0/utils/rlp"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 // Tests block header storage and retrieval operations.
