@@ -93,11 +93,6 @@ func TestBlockStorage(t *testing.T) {
 	} else if entry.Hash() != block.Hash() {
 		t.Fatalf("Retrieved block mismatch: have %v, want %v", entry, block)
 	}
-	if entry := ReadHeader(db, block.Hash(), block.NumberU64()); entry == nil {
-		t.Fatalf("Stored header not found")
-	} else if entry.Hash() != block.Header().Hash() {
-		t.Fatalf("Retrieved header mismatch: have %v, want %v", entry, block.Header())
-	}
 	// Delete the block and verify the execution
 	DeleteBlock(db, block.Hash(), block.NumberU64())
 	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
