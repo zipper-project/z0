@@ -60,19 +60,19 @@ func (n *BlockNonce) UnmarshalText(input []byte) error {
 
 // Header represents a block header in the blockchain.
 type Header struct {
-	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
-	Coinbase    common.Address `json:"miner"            gencodec:"required"`
-	Root        common.Hash    `json:"stateRoot"        gencodec:"required"`
-	TxHash      common.Hash    `json:"transactionsRoot" gencodec:"required"`
-	ReceiptHash common.Hash    `json:"receiptsRoot"     gencodec:"required"`
-	Difficulty  *big.Int       `json:"difficulty"       gencodec:"required"`
-	Number      *big.Int       `json:"number"           gencodec:"required"`
-	GasLimit    uint64         `json:"gasLimit"         gencodec:"required"`
-	GasUsed     uint64         `json:"gasUsed"          gencodec:"required"`
-	Time        *big.Int       `json:"timestamp"        gencodec:"required"`
-	Extra       []byte         `json:"extraData"        gencodec:"required"`
-	MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
-	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
+	ParentHash  common.Hash    `json:"parentHash"      `
+	Coinbase    common.Address `json:"miner"           `
+	Root        common.Hash    `json:"stateRoot"       `
+	TxHash      common.Hash    `json:"transactionsRoot"`
+	ReceiptHash common.Hash    `json:"receiptsRoot"    `
+	Difficulty  *big.Int       `json:"difficulty"      `
+	Number      *big.Int       `json:"number"          `
+	GasLimit    uint64         `json:"gasLimit"        `
+	GasUsed     uint64         `json:"gasUsed"         `
+	Time        *big.Int       `json:"timestamp"       `
+	Extra       []byte         `json:"extraData"       `
+	MixDigest   common.Hash    `json:"mixHash"         `
+	Nonce       BlockNonce     `json:"nonce"           `
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
@@ -88,10 +88,10 @@ func rlpHash(x interface{}) (h common.Hash) {
 	return h
 }
 
-// EncodeRLP serializes b into the Ethereum RLP block header format.
+// EncodeRLP serializes b into the  RLP block header format.
 func (h *Header) EncodeRLP() ([]byte, error) { return rlp.EncodeToBytes(h) }
 
-// DecodeRLP decodes the Ethereum
+// DecodeRLP decodes the header
 func (h *Header) DecodeRLP(input []byte) error { return rlp.Decode(bytes.NewReader(input), &h) }
 
 // Marshal encodes the web3 RPC block header format.
@@ -137,7 +137,7 @@ func (b *Block) ReceiptHash() common.Hash { return b.Head.ReceiptHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.Head.Extra) }
 func (b *Block) Header() *Header          { return CopyHeader(b.Head) }
 
-// EncodeRLP serializes b into the Ethereum RLP block format.
+// EncodeRLP serializes b into the RLP block format.
 func (b *Block) EncodeRLP() ([]byte, error) {
 	for _, tx := range b.Txs {
 		tx.data.Inputs, tx.data.Outputs = serialize(tx.inputs, tx.outputs, false)
@@ -145,7 +145,7 @@ func (b *Block) EncodeRLP() ([]byte, error) {
 	return rlp.EncodeToBytes(b)
 }
 
-// DecodeRLP decodes the Ethereum
+// DecodeRLP decodes the block
 func (b *Block) DecodeRLP(input []byte) error {
 	err := rlp.Decode(bytes.NewReader(input), &b)
 	if err == nil {
