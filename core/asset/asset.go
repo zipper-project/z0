@@ -20,7 +20,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/z0/common"
+	"github.com/zipper-project/z0/common"
 )
 
 const (

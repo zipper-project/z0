@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/z0/common"
+	"github.com/zipper-project/z0/common"
 )
 
 //ZipAccount .
