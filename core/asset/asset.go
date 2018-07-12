@@ -15,3 +15,57 @@
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 package asset
+
+import (
+	"math/big"
+	"strconv"
+
+	"github.com/z0/common"
+)
+
+const (
+	// Zip account
+	Zip = iota
+	// Utxo account
+	Utxo
+)
+
+var (
+	account = []byte("account")
+)
+
+//Asset base asset interface
+type Asset interface {
+	Pay() error
+	Revenue()
+	Encode()
+}
+
+//Account base account interface
+type Account interface {
+	MakeAsset(value *big.Int, db int) Asset
+	GetBalance() *big.Int
+}
+
+//GetAccountType get all account type of the user
+func GetAccountType(address common.Hash, statedb interface{}) []int {
+	// address = nil
+	types := make([]int, 0)
+	types = append(types, Zip)
+	types = append(types, Utxo)
+	return types
+}
+
+//GetZipAccount get zipaccount information of the user
+func GetZipAccount(address common.Hash, statedb interface{}) Account {
+	// address = nil
+	strType := strconv.Itoa(Zip)
+	key := make([]byte, len(address[:])+len(account)+len(strType[:]))
+	copy(key, address[:])
+	copy(key, account)
+	copy(key, strType[:])
+
+	balance := big.NewInt(1)
+
+	return newZipAccount(balance, address)
+}
