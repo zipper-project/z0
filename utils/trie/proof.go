@@ -23,8 +23,7 @@ import (
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/crypto"
 	"github.com/zipper-project/z0/zdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/zipper-project/z0/utils/rlp"
 )
 
 // Prove constructs a merkle proof for key. The result contains all encoded nodes
@@ -58,7 +57,7 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb zdb.Putter) error {
 			var err error
 			tn, err = t.resolveHash(n, nil)
 			if err != nil {
-				log.Error(fmt.Sprintf("Unhandled trie error: %v", err))
+				fmt.Println(fmt.Sprintf("Unhandled trie error: %v", err))
 				return err
 			}
 		default:

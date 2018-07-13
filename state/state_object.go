@@ -50,8 +50,8 @@ func StorageCopy(origin map[common.Hash]common.Hash) map[common.Hash]common.Hash
 	return new
 }
 
-func CacheAccountCopy(origin map[common.Address][]byte) map[common.Address][]byte {
-	new := make(map[common.Address][]byte)
+func CacheAccountCopy(origin map[string][]byte) map[string][]byte {
+	new := make(map[string][]byte)
 	for k, v := range origin {
 		new[k] = v
 	}
@@ -70,8 +70,8 @@ type stateObject struct {
 	attrie Trie
 	code   []byte
 
-	cacheAccount map[common.Address][]byte
-	dirtyAccount map[common.Address][]byte
+	cacheAccount map[string][]byte
+	dirtyAccount map[string][]byte
 
 	cachedStorage map[common.Hash]common.Hash // Storage entry cache to avoid duplicate reads
 	dirtyStorage  map[common.Hash]common.Hash // Storage entries that need to be flushed to disk
@@ -99,8 +99,8 @@ func newObject(db *StateDB, address common.Address, data Account) *stateObject {
 		address:       address,
 		addrHash:      crypto.Keccak256Hash(address[:]),
 		data:          data,
-		cacheAccount:  make(map[common.Address][]byte),
-		dirtyAccount:  make(map[common.Address][]byte),
+		cacheAccount:  make(map[string][]byte),
+		dirtyAccount:  make(map[string][]byte),
 		cachedStorage: make(map[common.Hash]common.Hash),
 		dirtyStorage:  make(map[common.Hash]common.Hash),
 	}
@@ -182,12 +182,12 @@ func (self *stateObject) setState(key, value common.Hash) {
 	self.dirtyStorage[key] = value
 }
 
-func (self *stateObject) GetAccount(db Database, key common.Address) []byte {
+func (self *stateObject) GetAccount(db Database, key string) []byte {
 	value, exists := self.cacheAccount[key]
 	if exists {
 		return value
 	}
-	enc, err := self.getTrie(db, self.data.AtRoot, ATROOTFlAG).TryGet(key[:])
+	enc, err := self.getTrie(db, self.data.AtRoot, ATROOTFlAG).TryGet([]byte(key))
 	if err != nil {
 		self.setError(err)
 		return []byte{}
@@ -196,7 +196,7 @@ func (self *stateObject) GetAccount(db Database, key common.Address) []byte {
 	return enc
 }
 
-func (self *stateObject) SetAccount(db Database, key common.Address, value []byte) {
+func (self *stateObject) SetAccount(db Database, key string, value []byte) {
 	self.db.journal.append(accountChange{
 		account:  &self.address,
 		key:      key,
@@ -205,12 +205,12 @@ func (self *stateObject) SetAccount(db Database, key common.Address, value []byt
 	self.setAccount(key, value)
 }
 
-func (self *stateObject) setAccount(key common.Address, value []byte) {
+func (self *stateObject) setAccount(key string, value []byte) {
 	self.cacheAccount[key] = value
 	self.dirtyAccount[key] = value
 }
 
-func (self *stateObject) DeleteAccount(db Database, key common.Address) {
+func (self *stateObject) DeleteAccount(db Database, key string) {
 	self.db.journal.append(accountChange{
 		account:  &self.address,
 		key:      key,
@@ -219,7 +219,7 @@ func (self *stateObject) DeleteAccount(db Database, key common.Address) {
 	self.deleteAccount(key)
 }
 
-func (self *stateObject) deleteAccount(key common.Address) {
+func (self *stateObject) deleteAccount(key string) {
 	delete(self.cacheAccount, key)
 	delete(self.dirtyAccount, key)
 }
@@ -278,10 +278,10 @@ func (self *stateObject) updateAccountTrie(db Database) Trie {
 	for k, _ := range self.dirtyAccount {
 		value, _ := self.cacheAccount[k]
 		if ok := bytes.Equal(value, []byte{}); ok {
-			self.setError(tr.TryDelete(k[:]))
+			self.setError(tr.TryDelete([]byte(k)))
 			continue
 		}
-		self.setError(tr.TryUpdate(k[:], value))
+		self.setError(tr.TryUpdate([]byte(k), value))
 	}
 	return tr
 }

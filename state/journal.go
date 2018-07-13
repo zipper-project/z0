@@ -78,7 +78,7 @@ type (
 	}
 	accountChange struct {
 		account  *common.Address
-		key      common.Address
+		key      string
 		prevalue []byte
 	}
 	codeChange struct {

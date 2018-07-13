@@ -39,11 +39,11 @@ func TestUpdateLeaks(t *testing.T) {
 			id = state.Snapshot()
 		}
 		for j := 0; j < 3; j++ {
-			data := []byte("statekey" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
-			value := []byte("statevalue" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
+			data := []byte("stk" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
+			value := []byte("stv" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
 			state.SetState(addr, common.BytesToHash(data), common.BytesToHash(value))
 
-			key := common.BytesToAddress([]byte{byte(j)})
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			value = []byte("account" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
 			state.SetAccount(addr, key, value)
 		}
@@ -62,12 +62,12 @@ func TestUpdateLeaks(t *testing.T) {
 		addr := common.BytesToAddress([]byte{i})
 
 		for j := 0; j < 3; j++ {
-			data := []byte("statekey" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
-			value := []byte("statevalue" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)) + "new")
+			data := []byte("stk" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
+			value := []byte("stv" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)) + "new")
 
 			cpy.SetState(addr, common.BytesToHash(data), common.BytesToHash(value))
 
-			key := common.BytesToAddress([]byte{byte(j)})
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			value = []byte("account" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)) + "new")
 			cpy.SetAccount(addr, key, value)
 		}
@@ -83,13 +83,13 @@ func TestUpdateLeaks(t *testing.T) {
 		addr := common.BytesToAddress([]byte{i})
 
 		for j := 0; j < 3; j++ {
-			data := []byte("statekey" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
+			data := []byte("stk" + strconv.Itoa(int(i)) + strconv.Itoa(int(j)))
 			t := cpyt.GetState(addr, common.BytesToHash(data))
 			fmt.Println(string(t[:]))
 
 		}
 		for j := 0; j < 3; j++ {
-			key := common.BytesToAddress([]byte{byte(j)})
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			m := cpyt.GetAccount(addr, key)
 			fmt.Println(string(m))
 		}
@@ -154,9 +154,10 @@ func TestSetAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
+
 			value := []byte("av" + strconv.Itoa(i) + strconv.Itoa(j))
-			state.SetAccount(addr, common.BytesToAddress(key), value)
+			state.SetAccount(addr, key, value)
 		}
 		state.IntermediateRoot(true)
 	}
@@ -170,9 +171,9 @@ func TestSetAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			value := []byte("av1" + strconv.Itoa(i) + strconv.Itoa(j))
-			cpy1.SetAccount(addr, common.BytesToAddress(key), value)
+			cpy1.SetAccount(addr, key, value)
 		}
 		cpy1.IntermediateRoot(true)
 	}
@@ -186,8 +187,8 @@ func TestSetAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
-			s := cpy2.GetAccount(addr, common.BytesToAddress(key))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
+			s := cpy2.GetAccount(addr, key)
 			fmt.Println(string(s[:]))
 		}
 	}
@@ -199,9 +200,9 @@ func TestDeleteAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			value := []byte("av" + strconv.Itoa(i) + strconv.Itoa(j))
-			state.SetAccount(addr, common.BytesToAddress(key), value)
+			state.SetAccount(addr, key, value)
 		}
 		state.IntermediateRoot(true)
 	}
@@ -215,11 +216,11 @@ func TestDeleteAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
 			value := []byte("av1" + strconv.Itoa(i) + strconv.Itoa(j))
-			cpy1.SetAccount(addr, common.BytesToAddress(key), value)
+			cpy1.SetAccount(addr, key, value)
 			if i == 1 {
-				cpy1.DeleteAccount(addr, common.BytesToAddress(key))
+				cpy1.DeleteAccount(addr, key)
 			}
 		}
 		cpy1.IntermediateRoot(true)
@@ -234,8 +235,9 @@ func TestDeleteAccount(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		addr := common.BytesToAddress([]byte{byte(i)})
 		for j := 0; j < 4; j++ {
-			key := []byte("ak" + strconv.Itoa(i) + strconv.Itoa(j))
-			s := cpy2.GetAccount(addr, common.BytesToAddress(key))
+			key := "at" + strconv.Itoa(int(i)) + strconv.Itoa(int(j))
+
+			s := cpy2.GetAccount(addr, key)
 			fmt.Println(string(s[:]))
 		}
 	}
