@@ -7,10 +7,6 @@
 			"revision": ""
 		},
 		{
-			"path": "github.com/ethereum/go-ethereum/common",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
@@ -21,14 +17,6 @@
 			"path": "github.com/ethereum/go-ethereum/common/math",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
 			"revisionTime": "2018-06-29T12:15:38Z"
-		},
-		{
-			"path": "github.com/ethereum/go-ethereum/core/types",
-			"revision": ""
-		},
-		{
-			"path": "github.com/ethereum/go-ethereum/crypto",
-			"revision": ""
 		},
 		{
 			"checksumSHA1": "rh+7MlXrS29QaJG/YZCAjlR+hxg=",
