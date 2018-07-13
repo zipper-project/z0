@@ -189,7 +189,7 @@ func (self *StateDB) SetState(addr common.Address, key, value common.Hash) {
 	}
 }
 
-func (self *StateDB) GetAccount(addr common.Address, key common.Address) []byte {
+func (self *StateDB) GetAccount(addr common.Address, key string) []byte {
 	stateObject := self.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.GetAccount(self.db, key)
@@ -197,14 +197,14 @@ func (self *StateDB) GetAccount(addr common.Address, key common.Address) []byte 
 	return []byte{}
 }
 
-func (self *StateDB) SetAccount(addr common.Address, key common.Address, value []byte) {
+func (self *StateDB) SetAccount(addr common.Address, key string, value []byte) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SetAccount(self.db, key, value)
 	}
 }
 
-func (self *StateDB) DeleteAccount(addr common.Address, key common.Address) {
+func (self *StateDB) DeleteAccount(addr common.Address, key string) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.DeleteAccount(self.db, key)

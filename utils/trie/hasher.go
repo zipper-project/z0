@@ -21,8 +21,8 @@ import (
 	"sync"
 
 	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/crypto/sha3"
 	"github.com/zipper-project/z0/utils/rlp"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 type hasher struct {
