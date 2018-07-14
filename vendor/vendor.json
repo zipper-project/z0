@@ -3,6 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",
@@ -163,6 +167,10 @@
 			"path": "gopkg.in/check.v1",
 			"revision": "788fd78401277ebd861206a03c884797c6ec5541",
 			"revisionTime": "2018-06-28T17:31:08Z"
+		},
+		{
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/prque",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/zipper-project/z0"

@@ -25,7 +25,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"fmt"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
@@ -40,11 +40,12 @@ type LDBDatabase struct {
 	fn string      // filename for reporting
 	db *leveldb.DB // LevelDB instance
 
-	//log log.Logger // Contextual logger tracking the database path
+	log log.Logger // Contextual logger tracking the database path
 }
 
 // NewLDBDatabase returns a LevelDB wrapped object.
 func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
+	logger := log.New("database", file)
 
 	// Ensure we have some minimal caching and file guarantees
 	if cache < 16 {
@@ -53,7 +54,7 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	if handles < 16 {
 		handles = 16
 	}
-	fmt.Println("Allocated cache and file handles", "cache", cache, "handles", handles)
+	logger.Info("Allocated cache and file handles", "cache", cache, "handles", handles)
 
 	// Open the db and recover any potential corruptions
 	db, err := leveldb.OpenFile(file, &opt.Options{
@@ -72,6 +73,7 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	return &LDBDatabase{
 		fn:  file,
 		db:  db,
+		log: logger,
 	}, nil
 }
 
@@ -115,9 +117,9 @@ func (db *LDBDatabase) NewIteratorWithPrefix(prefix []byte) iterator.Iterator {
 func (db *LDBDatabase) Close() {
 	err := db.db.Close()
 	if err == nil {
-		fmt.Println("Info Database closed")
+		db.log.Info("Database closed")
 	} else {
-		fmt.Println("Error Failed to close database")
+		db.log.Error("Failed to close database", "err", err)
 	}
 }
 
