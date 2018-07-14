@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/spf13/cobra"
 )
 
@@ -31,16 +32,37 @@ var RootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		// todo
-		fmt.Println("z0 start...")
+		if err := startNode(); err != nil {
+			log.Error("z0 start failed.", "err", err)
+		}
 	},
+}
+
+func startNode() error {
+	setUpConfig()
+	log.Info("z0 start...")
+
+	return nil
+}
+
+func init() {
+	// todo defining own help
+	// RootCmd.SetHelpTemplate( )
+	// RootCmd.SetHelpFunc()
+	// RootCmd.SetHelpCommand()
+
+	// logging
+	RootCmd.Flags().BoolVar(&logConfig.PrintOrigins, "debug", false, "Prepends log messages with call-site location (file and line number)")
+	RootCmd.Flags().IntVar(&logConfig.Level, "level", 3, "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail")
+	RootCmd.Flags().StringVar(&logConfig.Vmodule, "vmodule", "", "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,p2p=4)")
+	RootCmd.Flags().StringVar(&logConfig.BacktraceAt, "backtrace", "", "Request a stack trace at a specific logging statement (e.g. \"block.go:271\")")
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
 }
