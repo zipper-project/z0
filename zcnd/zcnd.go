@@ -17,13 +17,23 @@
 package zcnd
 
 import (
+	"sync"
+
+	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/zipper-project/z0/node"
 	"github.com/zipper-project/z0/rpc"
+	"github.com/zipper-project/z0/zdb"
 )
 
 // Zcnd implements the z0 service.
 type Zcnd struct {
+	config       *Config
+	shutdownChan chan bool // Channel for shutting down the service
+	txPool       *core.TxPool
+	chainDb      zdb.Database // Block chain database
+
+	lock sync.RWMutex // Protects the variadic fields (e.g. gas price)
 }
 
 // New creates a new Zcnd object (including the
