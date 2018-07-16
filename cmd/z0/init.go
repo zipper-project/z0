@@ -44,7 +44,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(initCmd)
-	initCmd.Flags().StringVarP(&dataDir, "datadir", "d", defaultDataDir(), "Data directory for the databases and keystore")
+	initCmd.Flags().StringVarP(&nodeConfig.DataDir, "datadir", "d", defaultDataDir(), "Data directory for the databases and keystore")
 }
 
 // initGenesis will initialise the given JSON format genesis file and writes it as
@@ -71,11 +71,11 @@ func defaultDataDir() string {
 	home := homeDir()
 	if home != "" {
 		if runtime.GOOS == "darwin" {
-			return filepath.Join(home, "Library", "z0")
+			return filepath.Join(home, "Library", "z0_ledger")
 		} else if runtime.GOOS == "windows" {
-			return filepath.Join(home, "AppData", "Roaming", "z0")
+			return filepath.Join(home, "AppData", "Roaming", "z0_ledger")
 		} else {
-			return filepath.Join(home, ".z0")
+			return filepath.Join(home, ".z0_ledger")
 		}
 	}
 	// As we cannot guess a stable location, return empty and handle later
