@@ -16,5 +16,26 @@
 
 package zcnd
 
+import (
+	"time"
+
+	"github.com/zipper-project/z0/core"
+	"github.com/zipper-project/z0/txpool"
+)
+
+// Config zcnd config
 type Config struct {
+	// The genesis block, which is inserted if the database is empty.
+	// If nil, the Ethereum main net block is used.
+	Genesis *core.Genesis `toml:",omitempty"`
+
+	// Database options
+	SkipBcVersionCheck bool `toml:"-"`
+	DatabaseHandles    int  `toml:"-"`
+	DatabaseCache      int
+	TrieCache          int
+	TrieTimeout        time.Duration
+
+	// Transaction pool options
+	TxPool *txpool.Config
 }

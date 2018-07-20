@@ -29,7 +29,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/utils/rlp"
+	"github.com/zipper-project/z0/utils/trie"
 )
+
+var EmptyRootHash = DeriveSha(Transactions{})
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
 // mix-hash) that a sufficient amount of computation has been carried
@@ -65,6 +68,7 @@ type Header struct {
 	Root        common.Hash    `json:"stateRoot"       `
 	TxHash      common.Hash    `json:"transactionsRoot"`
 	ReceiptHash common.Hash    `json:"receiptsRoot"    `
+	Bloom       Bloom          `json:"logsBloom"       `
 	Difficulty  *big.Int       `json:"difficulty"      `
 	Number      *big.Int       `json:"number"          `
 	GasLimit    uint64         `json:"gasLimit"        `
@@ -117,6 +121,31 @@ type Block struct {
 	// inter-peer block relay.
 	receivedAt   time.Time
 	receivedFrom interface{}
+}
+
+// NewBlock creates a new block. The input data is copied,
+// changes to header and to the field values will not affect the
+// block.
+func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*Receipt) *Block {
+	b := &Block{Head: header, td: new(big.Int)}
+
+	// TODO: panic if len(txs) != len(receipts)
+	if len(txs) == 0 {
+		b.Head.TxHash = EmptyRootHash
+	} else {
+		b.Head.TxHash = DeriveSha(Transactions(txs))
+		b.Txs = make(Transactions, len(txs))
+		copy(b.Txs, txs)
+	}
+
+	if len(receipts) == 0 {
+		b.Head.ReceiptHash = EmptyRootHash
+	} else {
+		b.Head.ReceiptHash = DeriveSha(Receipts(receipts))
+		b.Head.Bloom = CreateBloom(receipts)
+	}
+
+	return b
 }
 
 func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.Head.Number) }
@@ -201,4 +230,20 @@ func CopyHeader(h *Header) *Header {
 		copy(cpy.Extra, h.Extra)
 	}
 	return &cpy
+}
+
+type DerivableList interface {
+	Len() int
+	GetRlp(i int) []byte
+}
+
+func DeriveSha(list DerivableList) common.Hash {
+	keybuf := new(bytes.Buffer)
+	trie := new(trie.Trie)
+	for i := 0; i < list.Len(); i++ {
+		keybuf.Reset()
+		rlp.Encode(keybuf, uint(i))
+		trie.Update(keybuf.Bytes(), list.GetRlp(i))
+	}
+	return trie.Hash()
 }

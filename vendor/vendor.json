@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "kto0asmOE+Nuhj7T8cvrvIwq2ak=",
+			"path": "github.com/aristanetworks/goarista/monotime",
+			"revision": "32a4de07828f33fc490e6acfbdc211c4f2143ee7",
+			"revisionTime": "2018-07-18T17:25:41Z"
+		},
+		{
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": ""
 		},

@@ -17,20 +17,25 @@
 package zcnd
 
 import (
+	"fmt"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/zipper-project/z0/core"
 	"github.com/zipper-project/z0/node"
+	"github.com/zipper-project/z0/params"
+	"github.com/zipper-project/z0/rawdb"
 	"github.com/zipper-project/z0/rpc"
+	"github.com/zipper-project/z0/txpool"
 	"github.com/zipper-project/z0/zdb"
 )
 
 // Zcnd implements the z0 service.
 type Zcnd struct {
 	config       *Config
+	chainConfig  *params.ChainConfig
 	shutdownChan chan bool // Channel for shutting down the service
-	txPool       *core.TxPool
+	txPool       *txpool.TxPool
 	chainDb      zdb.Database // Block chain database
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price)
@@ -39,7 +44,41 @@ type Zcnd struct {
 // New creates a new Zcnd object (including the
 // initialisation of the common Zcnd object)
 func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
-	return nil, nil
+	chainDb, err := CreateDB(ctx, config, "chaindata")
+	if err != nil {
+		return nil, err
+	}
+
+	chainCfg, _, err := core.SetupGenesisBlock(chainDb, config.Genesis)
+	if err != nil {
+		return nil, err
+	}
+	log.Info("Initialised chain configuration", "config", chainCfg)
+
+	zcnd := &Zcnd{
+		config:       config,
+		chainDb:      chainDb,
+		chainConfig:  chainCfg,
+		shutdownChan: make(chan bool),
+	}
+
+	if !config.SkipBcVersionCheck {
+		bcVersion := rawdb.ReadDatabaseVersion(chainDb)
+		if bcVersion != core.BlockChainVersion && bcVersion != 0 {
+			return nil, fmt.Errorf("Blockchain DB version mismatch (%d / %d).\n", bcVersion, core.BlockChainVersion)
+		}
+		rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
+	}
+
+	// txpool
+	if config.TxPool.Journal != "" {
+		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
+	}
+
+	// todo add blockchian
+	zcnd.txPool = txpool.New(config.TxPool, zcnd.chainConfig, nil)
+
+	return zcnd, nil
 }
 
 // APIs return the collection of RPC services the zcnd package offers.
@@ -52,4 +91,22 @@ func (z *Zcnd) Start() error {
 }
 
 // Stop implements node.Service, terminating all internal goroutine
-func (z *Zcnd) Stop() error { return nil }
+func (z *Zcnd) Stop() error {
+	z.txPool.Stop()
+	z.chainDb.Close()
+	close(z.shutdownChan)
+	return nil
+}
+
+// CreateDB creates the chain database.
+func CreateDB(ctx *node.ServiceContext, config *Config, name string) (zdb.Database, error) {
+	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
+	if err != nil {
+		return nil, err
+	}
+	// todo configures the database metrics collectors
+	// if db, ok := db.(*zdb.LDBDatabase); ok {
+	// 	db.Meter("z0/db/chaindata/")
+	// }
+	return db, nil
+}

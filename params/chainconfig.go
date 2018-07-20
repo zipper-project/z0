@@ -1,4 +1,4 @@
-// Copyright 2018 The zipper team Authors
+// Copyright 2018 The zipper Authors
 // This file is part of the z0 library.
 //
 // The z0 library is free software: you can redistribute it and/or modify
@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
-package txpool
+package params
 
-type TxPool struct {
+import (
+	"math/big"
+)
+
+// ChainConfig is the core config which determines the blockchain settings.
+// ChainConfig is stored in the database on a per block basis.
+type ChainConfig struct {
+	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
 }

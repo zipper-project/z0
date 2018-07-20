@@ -19,13 +19,11 @@ package rawdb
 import (
 	"encoding/json"
 
-	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/utils/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/params"
+	"github.com/zipper-project/z0/utils/rlp"
 )
-
-type ChainConfigTest struct {
-}
 
 // ReadDatabaseVersion retrieves the version number of the database.
 func ReadDatabaseVersion(db DatabaseReader) int {
@@ -46,12 +44,12 @@ func WriteDatabaseVersion(db DatabaseWriter, version int) {
 }
 
 // ReadChainConfig retrieves the consensus settings based on the given genesis hash.
-func ReadChainConfig(db DatabaseReader, hash common.Hash) *ChainConfigTest {
+func ReadChainConfig(db DatabaseReader, hash common.Hash) *params.ChainConfig {
 	data, _ := db.Get(configKey(hash))
 	if len(data) == 0 {
 		return nil
 	}
-	var config ChainConfigTest
+	var config params.ChainConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		log.Crit("Invalid chain config JSON", "hash", hash, "err", err)
 		return nil
@@ -60,7 +58,7 @@ func ReadChainConfig(db DatabaseReader, hash common.Hash) *ChainConfigTest {
 }
 
 // WriteChainConfig writes the chain config settings to the database.
-func WriteChainConfig(db DatabaseWriter, hash common.Hash, cfg *ChainConfigTest) {
+func WriteChainConfig(db DatabaseWriter, hash common.Hash, cfg *params.ChainConfig) {
 	if cfg == nil {
 		return
 	}
