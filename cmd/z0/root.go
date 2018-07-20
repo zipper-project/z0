@@ -51,18 +51,13 @@ var RootCmd = &cobra.Command{
 }
 
 func makeNode() *node.Node {
-	// load defaults config
-	z0_Config.NodeCfg = nodeConfig
-	z0_Config.ZcndCfg = zcndConfig
-
 	//  load config file.
-	if file := z0_Config.ConfigFileFlag; file != "" {
-		if err := loadConfig(file, z0_Config); err != nil {
+	if file := zconfig.ConfigFileFlag; file != "" {
+		if err := loadConfig(file, zconfig); err != nil {
 			log.Error("load config file %v", err)
 		}
 	}
-
-	return node.New(z0_Config.NodeCfg)
+	return node.New(zconfig.NodeCfg)
 }
 
 // start up the node itself
@@ -92,13 +87,13 @@ func registerService(stack *node.Node) error {
 	var err error
 	// register zcnd
 	err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		return zcnd.New(ctx, z0_Config.ZcndCfg)
+		return zcnd.New(ctx, zconfig.ZcndCfg)
 	})
 	return err
 }
 
 func init() {
-	// todo defining own help
+	// todo defining own help template
 	// RootCmd.SetHelpTemplate( )
 	// RootCmd.SetHelpFunc()
 	// RootCmd.SetHelpCommand()
@@ -109,11 +104,16 @@ func init() {
 	RootCmd.Flags().StringVar(&logConfig.Vmodule, "vmodule", "", "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,p2p=4)")
 	RootCmd.Flags().StringVar(&logConfig.BacktraceAt, "backtrace", "", "Request a stack trace at a specific logging statement (e.g. \"block.go:271\")")
 
-	// node
-	RootCmd.Flags().StringVarP(&nodeConfig.DataDir, "datadir", "d", defaultDataDir(), "Data directory for the databases and keystore")
-
 	// config file
-	RootCmd.Flags().StringVarP(&z0_Config.ConfigFileFlag, "config", "c", "", "TOML configuration file")
+	RootCmd.Flags().StringVarP(&zconfig.ConfigFileFlag, "config", "c", "", "TOML configuration file")
+
+	// node
+	RootCmd.Flags().StringVarP(&zconfig.NodeCfg.DataDir, "datadir", "d", defaultDataDir(), "Data directory for the databases and keystore")
+
+	// zcnd
+	// RootCmd.Flags().StringVarP(&zconfig.NodeCfg.DataDir, "datadir", "d", defaultDataDir(), "Data directory for the databases and keystore")
+
+	// txpool
 
 }
 

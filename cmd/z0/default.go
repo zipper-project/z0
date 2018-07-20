@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 	"unicode"
 
 	"github.com/ethereum/go-ethereum/log"
@@ -29,6 +30,7 @@ import (
 	"github.com/zipper-project/z0/config"
 	"github.com/zipper-project/z0/node"
 	"github.com/zipper-project/z0/params"
+	"github.com/zipper-project/z0/txpool"
 	"github.com/zipper-project/z0/zcnd"
 )
 
@@ -59,20 +61,10 @@ type Config interface {
 
 var (
 	// log config
-
 	logConfig = new(config.LogConfig)
 
-	// node Config
-	nodeConfig = &node.Config{
-		Name:   params.ClientIdentifier,
-		Logger: log.New(),
-	}
-
-	// zcnd Config
-	zcndConfig = new(zcnd.Config)
-
-	//z0 Config
-	z0_Config = new(z0Config)
+	//z0 config
+	zconfig = defaultZ0Config()
 )
 
 func init() {
@@ -98,4 +90,44 @@ func loadConfig(file string, cfg *z0Config) error {
 		err = errors.New(file + ", " + err.Error())
 	}
 	return err
+}
+
+func defaultZ0Config() *z0Config {
+	return &z0Config{
+		NodeCfg: defaultNodeConfig(),
+		ZcndCfg: defaultZcndConfig(),
+	}
+}
+
+func defaultZcndConfig() *zcnd.Config {
+	return &zcnd.Config{
+		DatabaseCache: 768,
+		TrieCache:     256,
+		TrieTimeout:   60 * time.Minute,
+		TxPool:        defaultTxPoolConfig(),
+	}
+}
+
+func defaultNodeConfig() *node.Config {
+	return &node.Config{
+		Name:   params.ClientIdentifier,
+		Logger: log.New(),
+	}
+}
+
+func defaultTxPoolConfig() *txpool.Config {
+	return &txpool.Config{
+		Journal:   "transactions.rlp",
+		Rejournal: time.Hour,
+
+		PriceLimit: 1,
+		PriceBump:  10,
+
+		AccountSlots: 16,
+		GlobalSlots:  4096,
+		AccountQueue: 64,
+		GlobalQueue:  1024,
+
+		Lifetime: 3 * time.Hour,
+	}
 }
