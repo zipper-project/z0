@@ -25,6 +25,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/naoina/toml"
 	"github.com/zipper-project/z0/config"
@@ -101,10 +102,11 @@ func defaultZ0Config() *z0Config {
 
 func defaultZcndConfig() *zcnd.Config {
 	return &zcnd.Config{
-		DatabaseCache: 768,
-		TrieCache:     256,
-		TrieTimeout:   60 * time.Minute,
-		TxPool:        defaultTxPoolConfig(),
+		DatabaseHandles: makeDatabaseHandles(),
+		DatabaseCache:   768,
+		TrieCache:       256,
+		TrieTimeout:     60 * time.Minute,
+		TxPool:          defaultTxPoolConfig(),
 	}
 }
 
@@ -130,4 +132,22 @@ func defaultTxPoolConfig() *txpool.Config {
 
 		Lifetime: 3 * time.Hour,
 	}
+}
+
+// makeDatabaseHandles raises out the number of allowed file handles per process
+// for z0 and returns half of the allowance to assign to the database.
+func makeDatabaseHandles() int {
+	limit, err := fdlimit.Current()
+	if err != nil {
+		log.Error("Failed to retrieve file descriptor allowance: %v", err)
+	}
+	if limit < 2048 {
+		if err := fdlimit.Raise(2048); err != nil {
+			log.Error("Failed to raise file descriptor allowance: %v", err)
+		}
+	}
+	if limit > 2048 { // cap database file descriptors even if more is available
+		limit = 2048
+	}
+	return limit / 2 // Leave half for networking and other stuff
 }

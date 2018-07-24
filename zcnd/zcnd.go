@@ -17,6 +17,7 @@
 package zcnd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -35,6 +36,7 @@ type Zcnd struct {
 	config       *Config
 	chainConfig  *params.ChainConfig
 	shutdownChan chan bool // Channel for shutting down the service
+	blockchain   *core.BlockChain
 	txPool       *txpool.TxPool
 	chainDb      zdb.Database // Block chain database
 
@@ -44,6 +46,9 @@ type Zcnd struct {
 // New creates a new Zcnd object (including the
 // initialisation of the common Zcnd object)
 func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
+	cfg, err := json.Marshal(config)
+	log.Info("znd config :", "config", string(cfg))
+
 	chainDb, err := CreateDB(ctx, config, "chaindata")
 	if err != nil {
 		return nil, err
@@ -65,9 +70,15 @@ func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
 	if !config.SkipBcVersionCheck {
 		bcVersion := rawdb.ReadDatabaseVersion(chainDb)
 		if bcVersion != core.BlockChainVersion && bcVersion != 0 {
-			return nil, fmt.Errorf("Blockchain DB version mismatch (%d / %d).\n", bcVersion, core.BlockChainVersion)
+			return nil, fmt.Errorf("Blockchain DB version mismatch (%d / %d)", bcVersion, core.BlockChainVersion)
 		}
 		rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
+	}
+	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
+	//blockchain
+	zcnd.blockchain, err = core.New(chainDb, cacheConfig, zcnd.chainConfig)
+	if err != nil {
+		return nil, err
 	}
 
 	// txpool
@@ -76,7 +87,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
 	}
 
 	// todo add blockchian
-	zcnd.txPool = txpool.New(config.TxPool, zcnd.chainConfig, nil)
+	zcnd.txPool = txpool.New(config.TxPool, zcnd.chainConfig, zcnd.blockchain)
 
 	return zcnd, nil
 }
@@ -104,9 +115,5 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (zdb.Databa
 	if err != nil {
 		return nil, err
 	}
-	// todo configures the database metrics collectors
-	// if db, ok := db.(*zdb.LDBDatabase); ok {
-	// 	db.Meter("z0/db/chaindata/")
-	// }
 	return db, nil
 }

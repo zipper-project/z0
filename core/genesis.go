@@ -171,7 +171,7 @@ func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     &params.ChainConfig{ChainID: big.NewInt(0)},
 		Nonce:      0,
-		ExtraData:  hexutil.MustDecode("Z0 Genesis Block"),
+		ExtraData:  hexutil.MustDecode(hexutil.Encode([]byte("Z0 Genesis Block"))),
 		GasLimit:   5000,
 		Difficulty: big.NewInt(0),
 	}

@@ -36,5 +36,6 @@ type Config struct {
 }
 
 func (c *Config) check() *Config {
-	return nil
+	//todo
+	return c
 }

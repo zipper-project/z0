@@ -54,5 +54,5 @@ func (c *Config) resolvePath(path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(c.DataDir, c.Name)
+	return filepath.Join(filepath.Join(c.DataDir, c.Name), path)
 }

@@ -13,6 +13,12 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "VfQBQZL87++ZpC7Pn6dJQxjdA7M=",
+			"path": "github.com/ethereum/go-ethereum/common/fdlimit",
+			"revision": "526abe27361c242dbad965c883b0c08858e07c4c",
+			"revisionTime": "2018-07-22T19:11:52Z"
+		},
+		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
 			"path": "github.com/ethereum/go-ethereum/common/hexutil",
 			"revision": "fdfd6d3c3963b1b3459e4625458495458b11e8a7",

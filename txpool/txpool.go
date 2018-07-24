@@ -26,7 +26,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/event"
+	"github.com/zipper-project/z0/feed"
 	"github.com/zipper-project/z0/params"
 	"github.com/zipper-project/z0/state"
 	"github.com/zipper-project/z0/types"
@@ -39,13 +39,13 @@ var (
 )
 
 // blockChain provides the state of blockchain and current gas limit to do
-// some pre checks in tx pool and event subscribers.
+// some pre checks in tx pool and feed subscribers.
 type blockChain interface {
 	CurrentBlock() *types.Block
 	GetBlock(hash common.Hash, number uint64) *types.Block
 	StateAt(root common.Hash) (*state.StateDB, error)
 
-	SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription
+	SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) feed.Subscription
 }
 
 // TxPool contains all currently known transactions. Transactions
@@ -58,7 +58,7 @@ type TxPool struct {
 	signer       types.Signer
 	mu           sync.RWMutex
 	chainHeadCh  chan ChainHeadEvent
-	chainHeadSub event.Subscription
+	chainHeadSub feed.Subscription
 	currentState *state.StateDB // Current state in the blockchain head
 	//pendingState  *state.ManagedState // Pending state tracking virtual nonces
 	currentMaxGas uint64 // Current gas limit for transaction caps
@@ -435,6 +435,7 @@ func (tp *TxPool) promoteExecutables(accounts []common.Address) {
 	for _, list := range tp.pending {
 		pending += uint64(list.Len())
 	}
+
 	if pending > tp.config.GlobalSlots {
 		// Assemble a spam order to penalize large transactors first
 		spammers := prque.New()
