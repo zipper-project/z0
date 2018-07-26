@@ -16,14 +16,32 @@
 
 package txpool
 
-import "github.com/zipper-project/z0/types"
+import (
+	"sort"
+	"testing"
 
-const (
-	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
-	chainHeadChanSize = 10
+	"github.com/zipper-project/z0/common"
 )
 
-// NewTxsEvent is posted when a batch of transactions enter the transaction pool.
-type NewTxsEvent struct{ Txs []*types.Transaction }
+func TestNonceHeap(t *testing.T) {
+	var nh nonceHeap
 
-type ChainHeadEvent struct{ Block *types.Block }
+	array := []uint64{2, 1, 4, 3}
+	for _, v := range array {
+		nh.Push(v)
+	}
+	for i := 0; i < 4; i++ {
+		common.AssertEquals(t, array[3-i], nh.Pop().(uint64))
+	}
+
+	//test sort
+	sortarray := []uint64{4, 3, 2, 1}
+
+	for _, v := range array {
+		nh.Push(v)
+	}
+	sort.Sort(nh)
+	for i := 0; i < 4; i++ {
+		common.AssertEquals(t, sortarray[i], nh.Pop().(uint64))
+	}
+}

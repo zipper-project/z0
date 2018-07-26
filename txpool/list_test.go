@@ -16,14 +16,32 @@
 
 package txpool
 
-import "github.com/zipper-project/z0/types"
+import (
+	"math/rand"
+	"testing"
 
-const (
-	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
-	chainHeadChanSize = 10
+	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/crypto"
+	"github.com/zipper-project/z0/types"
 )
 
-// NewTxsEvent is posted when a batch of transactions enter the transaction pool.
-type NewTxsEvent struct{ Txs []*types.Transaction }
+func TestStrictTxListAdd(t *testing.T) {
+	// Generate a list of transactions to insert
+	key, _ := crypto.GenerateKey()
 
-type ChainHeadEvent struct{ Block *types.Block }
+	txs := make(types.Transactions, 1024)
+	for i := 0; i < len(txs); i++ {
+		txs[i] = transaction(uint64(i), 0, key)
+	}
+	// Insert the transactions in a random order
+	list := newTxList(true)
+	for _, v := range rand.Perm(len(txs)) {
+		list.Add(txs[v], 10)
+	}
+	// Verify internal state
+	common.AssertEquals(t, len(list.txs.items), len(txs))
+
+	for _, tx := range txs {
+		common.AssertEquals(t, list.txs.items[tx.Nonce()], tx)
+	}
+}

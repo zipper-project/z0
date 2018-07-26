@@ -16,14 +16,25 @@
 
 package txpool
 
-import "github.com/zipper-project/z0/types"
+import (
+	"math/big"
+	"testing"
 
-const (
-	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
-	chainHeadChanSize = 10
+	"github.com/zipper-project/z0/types"
 )
 
-// NewTxsEvent is posted when a batch of transactions enter the transaction pool.
-type NewTxsEvent struct{ Txs []*types.Transaction }
+func TestTxPriceList(t *testing.T) {
+	txlk := newTxLookup()
+	txpl := newTxPricedList(txlk)
+	txpl.Put(types.NewTransaction(2, "", 0, big.NewInt(200), nil))
+	txpl.Put(types.NewTransaction(1, "", 0, big.NewInt(200), nil))
+	txpl.Put(types.NewTransaction(4, "", 0, big.NewInt(400), nil))
+	txpl.Put(types.NewTransaction(3, "", 0, big.NewInt(100), nil))
 
-type ChainHeadEvent struct{ Block *types.Block }
+	// test Cap
+
+	// test Underpriced
+
+	// test Discard
+
+}

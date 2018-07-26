@@ -60,7 +60,7 @@ type TxPool struct {
 	chainHeadCh  chan ChainHeadEvent
 	chainHeadSub feed.Subscription
 	currentState *state.StateDB // Current state in the blockchain head
-	//pendingState  *state.ManagedState // Pending state tracking virtual nonces
+	// pendingState  *state.ManagedState // Pending state tracking virtual nonces
 	currentMaxGas uint64 // Current gas limit for transaction caps
 
 	locals  *accountSet                  // Set of local transaction to exempt from eviction rules
@@ -729,6 +729,41 @@ func (tp *TxPool) validateTx(tx *types.Transaction, local bool) error {
 		return ErrIntrinsicGas
 	}
 	return nil
+}
+
+// promoteTx adds a transaction to the pending (processable) list of transactions
+// and returns whether it was inserted or an older was better.
+//
+// Note, this method assumes the pool lock is held!
+func (tp *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.Transaction) bool {
+	// Try to insert the transaction into the pending queue
+	if tp.pending[addr] == nil {
+		tp.pending[addr] = newTxList(true)
+	}
+	list := tp.pending[addr]
+
+	inserted, old := list.Add(tx, tp.config.PriceBump)
+	if !inserted {
+		// An older transaction was better, discard this
+		tp.all.Remove(hash)
+		tp.priced.Removed()
+
+		return false
+	}
+	// Otherwise discard any previous transaction and mark this
+	if old != nil {
+		tp.all.Remove(old.Hash())
+		tp.priced.Removed()
+
+	}
+	// Failsafe to work around direct pending inserts (tests)
+	if tp.all.Get(hash) == nil {
+		tp.all.Add(tx)
+		tp.priced.Put(tx)
+	}
+	// Set the potentially new pending nonce and notify any subsystems of the new tx
+	tp.beats[addr] = time.Now()
+	return true
 }
 
 // AddLocal enqueues a single transaction into the pool if it is valid, marking
