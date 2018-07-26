@@ -24,14 +24,12 @@ import (
 )
 
 func AssertSame(t testing.TB, actual interface{}, expected interface{}) {
-	t.Logf("%s: AssertSame [%#v] and [%#v]", getCallerInfo(), actual, expected)
 	if actual != expected {
 		t.Fatalf("Values actual=[%#v] and expected=[%#v] do not point to same object. %s", actual, expected, getCallerInfo())
 	}
 }
 
 func AssertEquals(t testing.TB, actual interface{}, expected interface{}) {
-	t.Logf("%s: AssertEquals [%#v] and [%#v]", getCallerInfo(), actual, expected)
 	if expected == nil && isNil(actual) {
 		return
 	}

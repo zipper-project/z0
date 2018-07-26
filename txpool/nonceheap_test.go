@@ -13,26 +13,35 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
-package common
+
+package txpool
 
 import (
+	"sort"
 	"testing"
+
+	"github.com/zipper-project/z0/common"
 )
 
-func TestStorageSizeString(t *testing.T) {
-	tests := []struct {
-		size StorageSize
-		str  string
-	}{
-		{2381273, "2.38 mB"},
-		{2192, "2.19 kB"},
-		{12, "12.00 B"},
-		{32 * 1024, "32.77 kB"},
+func TestNonceHeap(t *testing.T) {
+	var nh nonceHeap
+
+	array := []uint64{2, 1, 4, 3}
+	for _, v := range array {
+		nh.Push(v)
+	}
+	for i := 0; i < 4; i++ {
+		common.AssertEquals(t, array[3-i], nh.Pop().(uint64))
 	}
 
-	for _, test := range tests {
-		if test.size.String() != test.str {
-			t.Errorf("%f: got %q, want %q", float64(test.size), test.size.String(), test.str)
-		}
+	//test sort
+	sortarray := []uint64{4, 3, 2, 1}
+
+	for _, v := range array {
+		nh.Push(v)
+	}
+	sort.Sort(nh)
+	for i := 0; i < 4; i++ {
+		common.AssertEquals(t, sortarray[i], nh.Pop().(uint64))
 	}
 }

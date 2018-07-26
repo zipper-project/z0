@@ -13,26 +13,31 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
-package common
+
+package zcnd
 
 import (
-	"testing"
+	"time"
+
+	"github.com/zipper-project/z0/core"
+	"github.com/zipper-project/z0/txpool"
 )
 
-func TestStorageSizeString(t *testing.T) {
-	tests := []struct {
-		size StorageSize
-		str  string
-	}{
-		{2381273, "2.38 mB"},
-		{2192, "2.19 kB"},
-		{12, "12.00 B"},
-		{32 * 1024, "32.77 kB"},
-	}
+// Config zcnd config
+type Config struct {
+	// The genesis block, which is inserted if the database is empty.
+	// If nil, the Ethereum main net block is used.
+	Genesis *core.Genesis `toml:",omitempty"`
 
-	for _, test := range tests {
-		if test.size.String() != test.str {
-			t.Errorf("%f: got %q, want %q", float64(test.size), test.size.String(), test.str)
-		}
-	}
+	NoPruning bool
+
+	// Database options
+	SkipBcVersionCheck bool `toml:"-"`
+	DatabaseHandles    int  `toml:"-"`
+	DatabaseCache      int
+	TrieCache          int
+	TrieTimeout        time.Duration
+
+	// Transaction pool options
+	TxPool *txpool.Config
 }

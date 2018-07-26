@@ -3,8 +3,20 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "kto0asmOE+Nuhj7T8cvrvIwq2ak=",
+			"path": "github.com/aristanetworks/goarista/monotime",
+			"revision": "32a4de07828f33fc490e6acfbdc211c4f2143ee7",
+			"revisionTime": "2018-07-18T17:25:41Z"
+		},
+		{
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "VfQBQZL87++ZpC7Pn6dJQxjdA7M=",
+			"path": "github.com/ethereum/go-ethereum/common/fdlimit",
+			"revision": "526abe27361c242dbad965c883b0c08858e07c4c",
+			"revisionTime": "2018-07-22T19:11:52Z"
 		},
 		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
@@ -71,6 +83,24 @@
 			"path": "github.com/mattn/go-isatty",
 			"revision": "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c",
 			"revisionTime": "2017-11-07T05:05:31Z"
+		},
+		{
+			"checksumSHA1": "A6nZdZ1/lTOVINhIndyw2ZWN9JU=",
+			"path": "github.com/naoina/go-stringutil",
+			"revision": "6b638e95a32d0c1131db0e7fe83775cbea4a0d0b",
+			"revisionTime": "2015-11-18T23:44:43Z"
+		},
+		{
+			"checksumSHA1": "FYM/8R2CqS6PSNAoKl6X5gNJ20A=",
+			"path": "github.com/naoina/toml",
+			"revision": "9fafd69674167c06933b1787ae235618431ce87f",
+			"revisionTime": "2017-09-18T21:04:37Z"
+		},
+		{
+			"checksumSHA1": "wqHUdIsZSwRHQzNTB+1KvJdONdM=",
+			"path": "github.com/naoina/toml/ast",
+			"revision": "9fafd69674167c06933b1787ae235618431ce87f",
+			"revisionTime": "2017-09-18T21:04:37Z"
 		},
 		{
 			"checksumSHA1": "Xnlls27MEcxIHhpRdsiUa2BqcFk=",

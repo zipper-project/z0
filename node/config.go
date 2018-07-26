@@ -29,7 +29,7 @@ type Config struct {
 	// Name sets the instance name of the node. It must not contain the / character and is
 	// used in the devp2p node identifier. The instance name of geth is "geth". If no
 	// value is specified, the basename of the current executable is used.
-	Name string
+	Name string `toml:"-"`
 	// DataDir is the file system folder the node should use for any data storage
 	// requirements. The configured data directory will not be directly shared with
 	// registered services, instead those can use utility methods to create/access
@@ -37,7 +37,7 @@ type Config struct {
 	// in memory.
 	DataDir string
 	// Logger is a custom logger to use with the p2p.Server.
-	Logger log.Logger
+	Logger log.Logger `toml:",omitempty"`
 }
 
 // NewConfig initialize config
@@ -54,5 +54,5 @@ func (c *Config) resolvePath(path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(c.DataDir, c.Name)
+	return filepath.Join(filepath.Join(c.DataDir, c.Name), path)
 }

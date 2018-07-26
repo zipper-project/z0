@@ -13,26 +13,25 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
-package common
 
-import (
-	"testing"
-)
+package txpool
 
-func TestStorageSizeString(t *testing.T) {
-	tests := []struct {
-		size StorageSize
-		str  string
-	}{
-		{2381273, "2.38 mB"},
-		{2192, "2.19 kB"},
-		{12, "12.00 B"},
-		{32 * 1024, "32.77 kB"},
-	}
+// nonceHeap is a heap.Interface implementation over 64bit unsigned integers for
+// retrieving sorted transactions from the possibly gapped future queue.
+type nonceHeap []uint64
 
-	for _, test := range tests {
-		if test.size.String() != test.str {
-			t.Errorf("%f: got %q, want %q", float64(test.size), test.size.String(), test.str)
-		}
-	}
+func (h nonceHeap) Len() int           { return len(h) }
+func (h nonceHeap) Less(i, j int) bool { return h[i] < h[j] }
+func (h nonceHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *nonceHeap) Push(x interface{}) {
+	*h = append(*h, x.(uint64))
+}
+
+func (h *nonceHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
 }

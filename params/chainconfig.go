@@ -1,4 +1,4 @@
-// Copyright 2018 The zipper team Authors
+// Copyright 2018 The zipper Authors
 // This file is part of the z0 library.
 //
 // The z0 library is free software: you can redistribute it and/or modify
@@ -13,26 +13,15 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
-package common
+
+package params
 
 import (
-	"testing"
+	"math/big"
 )
 
-func TestStorageSizeString(t *testing.T) {
-	tests := []struct {
-		size StorageSize
-		str  string
-	}{
-		{2381273, "2.38 mB"},
-		{2192, "2.19 kB"},
-		{12, "12.00 B"},
-		{32 * 1024, "32.77 kB"},
-	}
-
-	for _, test := range tests {
-		if test.size.String() != test.str {
-			t.Errorf("%f: got %q, want %q", float64(test.size), test.size.String(), test.str)
-		}
-	}
+// ChainConfig is the core config which determines the blockchain settings.
+// ChainConfig is stored in the database on a per block basis.
+type ChainConfig struct {
+	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
 }
