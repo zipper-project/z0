@@ -21,12 +21,13 @@ import (
 	"sort"
 	"sync"
 
+	"bytes"
+
 	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/types"
 	"github.com/zipper-project/z0/crypto"
+	"github.com/zipper-project/z0/types"
 	"github.com/zipper-project/z0/utils/rlp"
 	"github.com/zipper-project/z0/utils/trie"
-	"bytes"
 )
 
 type revision struct {

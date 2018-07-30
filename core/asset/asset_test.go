@@ -15,3 +15,21 @@
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 package asset
+
+import (
+	"testing"
+
+	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/state"
+	"github.com/zipper-project/z0/zdb"
+)
+
+func TestTypes(t *testing.T) {
+	db := zdb.NewMemDatabase()
+	tridb := state.NewDatabase(db)
+	state.New(common.Hash{}, tridb)
+
+	// if err != nil {
+	// 	t.Errorf("Unexpected error: %v", err)
+	// }
+}
