@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
-package core
+package asset
 
-import "time"
+import (
+	"github.com/zipper-project/z0/common"
+)
 
-// CacheConfig contains the configuration values for the trie caching/pruning
-// that's resident in a blockchain.
-type CacheConfig struct {
-	Disabled      bool          // Whether to disable trie write caching (archive node)
-	TrieNodeLimit int           // Memory limit (MB) at which to flush the current in-memory trie to disk
-	TrieTimeLimit time.Duration // Time limit after which to flush the current in-memory trie to disk
+// StateDB is an Asset database for full state querying.
+type StateDB interface {
+	GetAccount(addr common.Address, key string) []byte
+	SetAccount(addr common.Address, key string, value []byte)
 }

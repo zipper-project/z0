@@ -183,7 +183,7 @@ func (m *txSortedMap) Flatten() types.Transactions {
 		for _, tx := range m.items {
 			m.cache = append(m.cache, tx)
 		}
-		//	sort.Sort(types.TxByNonce(m.cache))
+		sort.Sort(types.TxByNonce(m.cache))
 	}
 	// Copy the cache to prevent accidental modifications
 	txs := make(types.Transactions, len(m.cache))

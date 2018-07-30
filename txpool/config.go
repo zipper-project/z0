@@ -35,7 +35,8 @@ type Config struct {
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
 
-func (c *Config) check() *Config {
+func (c *Config) check() Config {
+	conf := *c
 	//todo
-	return c
+	return conf
 }

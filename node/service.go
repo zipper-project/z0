@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	"github.com/zipper-project/z0/rpc"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // ServiceContext is a collection of service independent options inherited from

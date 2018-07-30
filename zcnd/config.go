@@ -26,7 +26,7 @@ import (
 // Config zcnd config
 type Config struct {
 	// The genesis block, which is inserted if the database is empty.
-	// If nil, the Ethereum main net block is used.
+	// If nil, the main net block is used.
 	Genesis *core.Genesis `toml:",omitempty"`
 
 	NoPruning bool

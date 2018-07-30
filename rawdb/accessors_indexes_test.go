@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/zipper-project/z0/types"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // Tests that positional lookup metadata can be stored and retrieved.

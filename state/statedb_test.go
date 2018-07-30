@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 func TestUpdateLeaks(t *testing.T) {

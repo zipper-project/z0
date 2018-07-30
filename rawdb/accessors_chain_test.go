@@ -23,9 +23,10 @@ import (
 
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/types"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 	"github.com/zipper-project/z0/utils/rlp"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"fmt"
 )
 
 // Tests block header storage and retrieval operations.
@@ -66,6 +67,49 @@ func TestHeaderStorage(t *testing.T) {
 	}
 }
 
+// Tests block body storage and retrieval operations.
+func TestBodyStorage(t *testing.T) {
+	db := zdb.NewMemDatabase()
+	tx1 := types.NewTransaction(uint64(1), "testid", uint64(1), big.NewInt(1), []byte("testdata1"))
+	tx2 := types.NewTransaction(uint64(2), "testid", uint64(2), big.NewInt(2), []byte("testdata2"))
+	txs := types.Transactions{tx1, tx2}
+	body := &types.Body{
+		Transactions: txs,
+	}
+
+	hasher := sha3.NewKeccak256()
+	rlp.Encode(hasher, body)
+	hash := common.BytesToHash(hasher.Sum(nil))
+
+	if entry := ReadBody(db, hash, 0); entry != nil {
+		t.Fatalf("Non existent body returned: %v", entry)
+	}
+	// Write and verify the body in the database
+	WriteBody(db, hash, 0, body)
+	if entry := ReadBody(db, hash, 0); entry == nil {
+		t.Fatalf("Stored body not found")
+	} else if types.DeriveSha(types.Transactions(entry.Transactions)) != types.DeriveSha(types.Transactions(body.Transactions)) {
+		t.Fatalf("Retrieved body mismatch: have %v, want %v", entry, body)
+	} else {
+		fmt.Println(string(entry.Transactions[0].Payload()), string(entry.Transactions[1].Payload()))
+	}
+	if entry := ReadBodyRLP(db, hash, 0); entry == nil {
+		t.Fatalf("Stored body RLP not found")
+	} else {
+		hasher := sha3.NewKeccak256()
+		hasher.Write(entry)
+
+		if calc := common.BytesToHash(hasher.Sum(nil)); calc != hash {
+			t.Fatalf("Retrieved RLP body mismatch: have %v, want %v", entry, body)
+		}
+	}
+	// Delete the body and verify the execution
+	DeleteBody(db, hash, 0)
+	if entry := ReadBody(db, hash, 0); entry != nil {
+		t.Fatalf("Deleted body returned: %v", entry)
+	}
+}
+
 // Tests block storage and retrieval operations.
 func TestBlockStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
@@ -77,14 +121,21 @@ func TestBlockStorage(t *testing.T) {
 		ReceiptHash: common.BytesToHash([]byte("test rcpthash")),
 		Number:      big.NewInt(1),
 	}
+	tx1 := types.NewTransaction(uint64(1), "testid", uint64(1), big.NewInt(1), []byte("testdata1"))
+	tx2 := types.NewTransaction(uint64(2), "testid", uint64(2), big.NewInt(2), []byte("testdata2"))
+	txs := types.Transactions{tx1, tx2}
 	block := &types.Block{
 		Head: header,
+		Txs:  txs,
 	}
 	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Non existent block returned: %v", entry)
 	}
 	if entry := ReadHeader(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Non existent header returned: %v", entry)
+	}
+	if entry := ReadBody(db, block.Hash(), block.NumberU64()); entry != nil {
+		t.Fatalf("Non existent body returned: %v", entry)
 	}
 	// Write and verify the block in the database
 	WriteBlock(db, block)

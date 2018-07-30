@@ -28,7 +28,7 @@ func TestSigning(t *testing.T) {
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 
 	signer := NewSigner(big.NewInt(18))
-	tx, err := SignTx(NewTransaction(0, "1234", 0, new(big.Int), nil), signer, key)
+	tx, err := SignTx(NewTransaction(0, 0, new(big.Int), nil), signer, key)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func TestChainID(t *testing.T) {
 	_ = crypto.PubkeyToAddress(key.PublicKey)
 
 	signer := NewSigner(big.NewInt(18))
-	tx, err := SignTx(NewTransaction(0, "1234", 0, new(big.Int), nil), signer, key)
+	tx, err := SignTx(NewTransaction(0, 0, new(big.Int), nil), signer, key)
 	if err != nil {
 		t.Fatal(err)
 	}

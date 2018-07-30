@@ -27,7 +27,7 @@ import (
 	"github.com/zipper-project/z0/rawdb"
 	"github.com/zipper-project/z0/state"
 	"github.com/zipper-project/z0/types"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
@@ -58,7 +58,7 @@ type Genesis struct {
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db zdb.Database, genesis *Genesis) (*params.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		return &params.ChainConfig{ChainID: big.NewInt(0)}, common.Hash{}, errGenesisNoConfig
+		return params.DefaultChainconfig, common.Hash{}, errGenesisNoConfig
 	}
 
 	// Just commit the new block if there is no stored genesis block.
@@ -153,7 +153,7 @@ func (g *Genesis) Commit(db zdb.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = &params.ChainConfig{ChainID: big.NewInt(0)}
+		config = params.DefaultChainconfig
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
@@ -163,13 +163,13 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 	if g != nil {
 		return g.Config
 	}
-	return &params.ChainConfig{ChainID: big.NewInt(0)}
+	return params.DefaultChainconfig
 }
 
 // DefaultGenesisBlock returns the z0 net genesis block.
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     &params.ChainConfig{ChainID: big.NewInt(0)},
+		Config:     params.DefaultChainconfig,
 		Nonce:      0,
 		ExtraData:  hexutil.MustDecode(hexutil.Encode([]byte("Z0 Genesis Block"))),
 		GasLimit:   5000,

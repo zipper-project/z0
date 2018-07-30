@@ -14,27 +14,36 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
-package txpool
+package core
 
 import (
-	"math/big"
-	"testing"
-
+	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/types"
 )
 
-func TestTxPriceList(t *testing.T) {
-	txlk := newTxLookup()
-	txpl := newTxPricedList(txlk)
-	txpl.Put(types.NewTransaction(2, 0, big.NewInt(200), nil))
-	txpl.Put(types.NewTransaction(1, 0, big.NewInt(200), nil))
-	txpl.Put(types.NewTransaction(4, 0, big.NewInt(400), nil))
-	txpl.Put(types.NewTransaction(3, 0, big.NewInt(100), nil))
+// NewTxsEvent is posted when a batch of transactions enter the transaction pool.
+type NewTxsEvent struct{ Txs []*types.Transaction }
 
-	// test Cap
+// PendingLogsEvent is posted pre mining and notifies of pending logs.
+type PendingLogsEvent struct {
+	Logs []*types.Log
+}
 
-	// test Underpriced
+// PendingStateEvent is posted pre mining and notifies of pending state changes.
+type PendingStateEvent struct{}
 
-	// test Discard
+// NewMinedBlockEvent is posted when a block has been imported.
+type NewMinedBlockEvent struct{ Block *types.Block }
 
+// RemovedLogsEvent is posted when a reorg happens
+type RemovedLogsEvent struct{ Logs []*types.Log }
+
+type ChainEvent struct {
+	Block *types.Block
+	Hash  common.Hash
+	Logs  []*types.Log
+}
+
+type ChainSideEvent struct {
+	Block *types.Block
 }

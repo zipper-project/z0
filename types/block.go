@@ -15,6 +15,7 @@
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package types contains data types related to Z0.
+
 package types
 
 import (
@@ -32,6 +33,7 @@ import (
 	"github.com/zipper-project/z0/utils/trie"
 )
 
+// EmptyRootHash emptt root hash
 var EmptyRootHash = DeriveSha(Transactions{})
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
@@ -148,29 +150,32 @@ func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*
 	return b
 }
 
-func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.Head.Number) }
-func (b *Block) GasLimit() uint64     { return b.Head.GasLimit }
-func (b *Block) GasUsed() uint64      { return b.Head.GasUsed }
-func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.Head.Difficulty) }
-func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.Head.Time) }
-
-func (b *Block) NumberU64() uint64      { return b.Head.Number.Uint64() }
-func (b *Block) MixDigest() common.Hash { return b.Head.MixDigest }
-
-func (b *Block) Nonce() uint64            { return binary.BigEndian.Uint64(b.Head.Nonce[:]) }
-func (b *Block) Coinbase() common.Address { return b.Head.Coinbase }
-func (b *Block) Root() common.Hash        { return b.Head.Root }
-func (b *Block) ParentHash() common.Hash  { return b.Head.ParentHash }
-func (b *Block) TxHash() common.Hash      { return b.Head.TxHash }
-func (b *Block) ReceiptHash() common.Hash { return b.Head.ReceiptHash }
-func (b *Block) Extra() []byte            { return common.CopyBytes(b.Head.Extra) }
-func (b *Block) Header() *Header          { return CopyHeader(b.Head) }
+// NewBlockWithHeader creates a block with the given header data. The
+// header data is copied, changes to header and to the field values
+// will not affect the block.
+func NewBlockWithHeader(header *Header) *Block {
+	return &Block{Head: CopyHeader(header)}
+}
+func (b *Block) Transactions() Transactions { return b.Txs }
+func (b *Block) Number() *big.Int           { return new(big.Int).Set(b.Head.Number) }
+func (b *Block) GasLimit() uint64           { return b.Head.GasLimit }
+func (b *Block) GasUsed() uint64            { return b.Head.GasUsed }
+func (b *Block) Difficulty() *big.Int       { return new(big.Int).Set(b.Head.Difficulty) }
+func (b *Block) Time() *big.Int             { return new(big.Int).Set(b.Head.Time) }
+func (b *Block) NumberU64() uint64          { return b.Head.Number.Uint64() }
+func (b *Block) MixDigest() common.Hash     { return b.Head.MixDigest }
+func (b *Block) Nonce() uint64              { return binary.BigEndian.Uint64(b.Head.Nonce[:]) }
+func (b *Block) Coinbase() common.Address   { return b.Head.Coinbase }
+func (b *Block) Root() common.Hash          { return b.Head.Root }
+func (b *Block) ParentHash() common.Hash    { return b.Head.ParentHash }
+func (b *Block) TxHash() common.Hash        { return b.Head.TxHash }
+func (b *Block) ReceiptHash() common.Hash   { return b.Head.ReceiptHash }
+func (b *Block) Extra() []byte              { return common.CopyBytes(b.Head.Extra) }
+func (b *Block) Header() *Header            { return CopyHeader(b.Head) }
+func (b *Block) Body() *Body                { return &Body{b.Txs} }
 
 // EncodeRLP serializes b into the RLP block format.
 func (b *Block) EncodeRLP() ([]byte, error) {
-	for _, tx := range b.Txs {
-		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, false)
-	}
 	return rlp.EncodeToBytes(b)
 }
 
@@ -179,9 +184,6 @@ func (b *Block) DecodeRLP(input []byte) error {
 	err := rlp.Decode(bytes.NewReader(input), &b)
 	if err == nil {
 		b.size.Store(common.StorageSize(len(input)))
-		for _, tx := range b.Txs {
-			tx.Inputs, tx.Outputs = deserialize(tx.Data.Inputs, tx.Data.Outputs)
-		}
 	}
 	return err
 }
@@ -191,9 +193,6 @@ func (b *Block) Marshal() ([]byte, error) {
 	type Block struct {
 		Header       *Header
 		Transactions Transactions
-	}
-	for _, tx := range b.Txs {
-		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, true)
 	}
 	var block Block
 	block.Header = b.Head
@@ -210,6 +209,16 @@ func (b *Block) Hash() common.Hash {
 	v := b.Head.Hash()
 	b.hash.Store(v)
 	return v
+}
+
+// WithBody returns a new block with the given transaction and uncle contents.
+func (b *Block) WithBody(transactions []*Transaction) *Block {
+	block := &Block{
+		Head: CopyHeader(b.Head),
+		Txs:  make([]*Transaction, len(transactions)),
+	}
+	copy(block.Txs, transactions)
+	return block
 }
 
 // CopyHeader creates a deep copy of a block header to prevent side effects from
@@ -246,4 +255,8 @@ func DeriveSha(list DerivableList) common.Hash {
 		trie.Update(keybuf.Bytes(), list.GetRlp(i))
 	}
 	return trie.Hash()
+}
+
+type Body struct {
+	Transactions []*Transaction
 }

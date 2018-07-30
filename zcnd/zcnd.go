@@ -23,12 +23,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/zipper-project/z0/core"
+	"github.com/zipper-project/z0/core/vm"
 	"github.com/zipper-project/z0/node"
 	"github.com/zipper-project/z0/params"
 	"github.com/zipper-project/z0/rawdb"
 	"github.com/zipper-project/z0/rpc"
 	"github.com/zipper-project/z0/txpool"
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // Zcnd implements the z0 service.
@@ -75,8 +76,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
 		rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
 	}
 	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
+
+	// todo add consensus and vmconfig
 	//blockchain
-	zcnd.blockchain, err = core.New(chainDb, cacheConfig, zcnd.chainConfig)
+	zcnd.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, zcnd.chainConfig, nil, vm.Config{})
 	if err != nil {
 		return nil, err
 	}

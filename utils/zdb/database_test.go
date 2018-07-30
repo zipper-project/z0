@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/zipper-project/z0/zdb"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 func newTestLDB() (*zdb.LDBDatabase, func()) {

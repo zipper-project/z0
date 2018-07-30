@@ -28,10 +28,10 @@ import (
 func TestPriceHeap(t *testing.T) {
 	var ph priceHeap
 	txs := []*types.Transaction{
-		types.NewTransaction(2, "", 0, big.NewInt(200), nil),
-		types.NewTransaction(1, "", 0, big.NewInt(200), nil),
-		types.NewTransaction(4, "", 0, big.NewInt(400), nil),
-		types.NewTransaction(3, "", 0, big.NewInt(100), nil),
+		types.NewTransaction(2, 0, big.NewInt(200), nil),
+		types.NewTransaction(1, 0, big.NewInt(200), nil),
+		types.NewTransaction(4, 0, big.NewInt(400), nil),
+		types.NewTransaction(3, 0, big.NewInt(100), nil),
 	}
 	for _, v := range txs {
 		ph.Push(v)
@@ -42,10 +42,10 @@ func TestPriceHeap(t *testing.T) {
 
 	//test sort,first sort by price,if the price is equal,sort by nonce,high nonce is worse.
 	sortTxs := []*types.Transaction{
-		types.NewTransaction(4, "", 0, big.NewInt(400), nil),
-		types.NewTransaction(1, "", 0, big.NewInt(200), nil),
-		types.NewTransaction(2, "", 0, big.NewInt(200), nil),
-		types.NewTransaction(3, "", 0, big.NewInt(100), nil),
+		types.NewTransaction(4, 0, big.NewInt(400), nil),
+		types.NewTransaction(1, 0, big.NewInt(200), nil),
+		types.NewTransaction(2, 0, big.NewInt(200), nil),
+		types.NewTransaction(3, 0, big.NewInt(100), nil),
 	}
 
 	for _, v := range txs {

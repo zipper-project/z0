@@ -149,6 +149,7 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 		}
 		journaled += len(txs)
 	}
+
 	replacement.Close()
 
 	// Replace the live journal with the newly generated one
