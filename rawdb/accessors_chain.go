@@ -189,54 +189,86 @@ func DeleteHeader(db DatabaseDeleter, hash common.Hash, number uint64) {
 }
 
 // ReadBodyRLP retrieves the block body (transactions and uncles) in RLP encoding.
-func ReadBlockRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
-	data, _ := db.Get(blockKey(number, hash))
+func ReadBodyRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
+	data, _ := db.Get(blockBodyKey(number, hash))
 	return data
 }
 
 // WriteBodyRLP stores an RLP encoded block body into the database.
-func WriteBlockRLP(db DatabaseWriter, hash common.Hash, number uint64, rlp rlp.RawValue) {
-	if err := db.Put(blockKey(number, hash), rlp); err != nil {
+func WriteBodyRLP(db DatabaseWriter, hash common.Hash, number uint64, rlp rlp.RawValue) {
+	if err := db.Put(blockBodyKey(number, hash), rlp); err != nil {
 		log.Crit("Failed to store block body", "err", err)
 	}
 }
 
 // HasBody verifies the existence of a block body corresponding to the hash.
-func HasBlock(db DatabaseReader, hash common.Hash, number uint64) bool {
-	if has, err := db.Has(blockKey(number, hash)); !has || err != nil {
+func HasBody(db DatabaseReader, hash common.Hash, number uint64) bool {
+	if has, err := db.Has(blockBodyKey(number, hash)); !has || err != nil {
 		return false
 	}
 	return true
 }
 
 // ReadBody retrieves the block body corresponding to the hash.
-func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
-	data := ReadBlockRLP(db, hash, number)
+func ReadBody(db DatabaseReader, hash common.Hash, number uint64) *types.Body {
+	data := ReadBodyRLP(db, hash, number)
 	if len(data) == 0 {
 		return nil
 	}
-	block := new(types.Block)
-	if err := rlp.Decode(bytes.NewReader(data), block); err != nil {
-		log.Crit("Invalid block body RLP", "hash", hash, "err", err)
+	body := new(types.Body)
+	if err := rlp.Decode(bytes.NewReader(data), body); err != nil {
+		log.Error("Invalid block body RLP", "hash", hash, "err", err)
 		return nil
 	}
-	return block
+	return body
 }
 
 // WriteBody storea a block body into the database.
-func WriteBlock(db DatabaseWriter, block *types.Block) {
-	data, err := rlp.EncodeToBytes(block)
+func WriteBody(db DatabaseWriter, hash common.Hash, number uint64, body *types.Body) {
+	data, err := rlp.EncodeToBytes(body)
 	if err != nil {
 		log.Crit("Failed to RLP encode body", "err", err)
 	}
-	WriteBlockRLP(db, block.Hash(), block.NumberU64(), data)
+	WriteBodyRLP(db, hash, number, data)
 }
 
 // DeleteBody removes all block body data associated with a hash.
-func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
-	if err := db.Delete(blockKey(number, hash)); err != nil {
+func DeleteBody(db DatabaseDeleter, hash common.Hash, number uint64) {
+	if err := db.Delete(blockBodyKey(number, hash)); err != nil {
 		log.Crit("Failed to delete block body", "err", err)
 	}
+}
+
+// ReadBlock retrieves an entire block corresponding to the hash, assembling it
+// back from the stored header and body. If either the header or body could not
+// be retrieved nil is returned.
+//
+// Note, due to concurrent download of header and block body the header and thus
+// canonical hash can be stored in the database but the body data not (yet).
+func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
+	header := ReadHeader(db, hash, number)
+	if header == nil {
+		return nil
+	}
+	body := ReadBody(db, hash, number)
+	if body == nil {
+		return nil
+	}
+	return types.NewBlockWithHeader(header).WithBody(body.Transactions)
+}
+
+// WriteBlock serializes a block into the database, header and body separately.
+func WriteBlock(db DatabaseWriter, block *types.Block) {
+	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
+	WriteHeader(db, block.Header())
+}
+
+// DeleteBlock removes all block data associated with a hash.
+func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
+	DeleteReceipts(db, hash, number)
+	DeleteHeader(db, hash, number)
+	DeleteBody(db, hash, number)
+	DeleteTd(db, hash, number)
 }
 
 // ReadTd retrieves a block's total difficulty corresponding to the hash.
