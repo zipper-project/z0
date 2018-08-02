@@ -29,15 +29,15 @@ import (
 )
 
 type genAssetInfo struct {
-	name         string
-	total        *big.Int
-	decimalPoint uint64
-	balance      *big.Int
+	Name         string
+	Total        *big.Int
+	DecimalPoint uint64
+	Balance      *big.Int
 }
 
 func registerGeneralAsset(db StateDB, accountAddr common.Address, nonce uint64, desc string) (common.Address, error) {
 	infoArray := strings.Split(desc, ",")
-	if len(infoArray) != 4 {
+	if len(infoArray) != 3 {
 		return common.Address{}, fmt.Errorf("RegisterGeneralAsset DATA INVALID")
 	}
 	name := infoArray[0]
@@ -59,6 +59,7 @@ func registerGeneralAsset(db StateDB, accountAddr common.Address, nonce uint64, 
 	assetAddress := crypto.CreateAssetAddress(accountAddr, nonce, name)
 	db.SetAccount(assetAddress, assetAddress.String(), b.Bytes())
 
+	//save
 	assetTypeKey := assetAddress.String() + string(assetType)
 	b = new(bytes.Buffer)
 	err = rlp.Encode(b, uint64(General))
@@ -71,10 +72,10 @@ func registerGeneralAsset(db StateDB, accountAddr common.Address, nonce uint64, 
 }
 
 func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.Address, value *big.Int) error {
+	//目标用户余额
 	key := targetAddr.String() + assetAddr.String()
 	selfAsset := db.GetAccount(targetAddr, key)
 	var balance *big.Int
-
 	if !bytes.Equal(selfAsset, []byte{}) {
 		err := rlp.Decode(bytes.NewReader(selfAsset), &balance)
 		if err != nil {
@@ -82,9 +83,10 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 		}
 	} else {
 		balance = big.NewInt(0)
-		setAccountType(General, db, targetAddr, assetAddr)
+		setAccountList(General, db, targetAddr, assetAddr)
 	}
 
+	//资产余额
 	var info genAssetInfo
 	asset := db.GetAccount(assetAddr, assetAddr.String())
 	if !bytes.Equal(asset, []byte{}) {
@@ -96,11 +98,11 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 		return fmt.Errorf("Asset not exit")
 	}
 
-	if info.total.Cmp(value) < 0 {
+	if info.Balance.Cmp(value) < 0 {
 		return fmt.Errorf("Asset not enough")
 	}
 
-	info.total = new(big.Int).Sub(info.total, value)
+	info.Balance = new(big.Int).Sub(info.Balance, value)
 	balance = new(big.Int).Add(balance, value)
 
 	b := new(bytes.Buffer)
@@ -108,14 +110,17 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 	if err != nil {
 		return err
 	}
-	db.SetAccount(assetAddr, key, b.Bytes())
+	//保存用户余额
+	db.SetAccount(targetAddr, key, b.Bytes())
 
 	b = new(bytes.Buffer)
 	err = rlp.Encode(b, &info)
 	if err != nil {
 		return err
 	}
-	db.SetAccount(targetAddr, targetAddr.String(), b.Bytes())
+	fmt.Printf("资产剩余:%v\n", info)
+	//保存资产余额
+	db.SetAccount(assetAddr, assetAddr.String(), b.Bytes())
 
 	return nil
 }
@@ -130,6 +135,7 @@ func subGeneralBalance(db StateDB, targetAddr common.Address, assetAddr common.A
 		if err != nil {
 			return err
 		}
+		fmt.Printf("balance:%v\n", balance)
 	} else {
 		return fmt.Errorf("Asset not exit")
 	}
@@ -138,13 +144,12 @@ func subGeneralBalance(db StateDB, targetAddr common.Address, assetAddr common.A
 		return fmt.Errorf("Asset not enough")
 	}
 	balance = new(big.Int).Sub(balance, value)
-
 	b := new(bytes.Buffer)
-	err := rlp.Encode(b, balance)
+	err := rlp.Encode(b, &balance)
 	if err != nil {
 		return err
 	}
-	db.SetAccount(assetAddr, key, b.Bytes())
+	db.SetAccount(targetAddr, key, b.Bytes())
 
 	return nil
 }
@@ -170,7 +175,7 @@ func addGeneralBalance(db StateDB, targetAddr common.Address, assetAddr common.A
 	if err != nil {
 		return err
 	}
-	db.SetAccount(assetAddr, key, b.Bytes())
+	db.SetAccount(targetAddr, key, b.Bytes())
 
 	return nil
 }

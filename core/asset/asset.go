@@ -78,7 +78,7 @@ func (a *Asset) IssueAsset(baseType int, targetAddr common.Address, assetAddr co
 	return nil
 }
 
-func setAccountType(baseType int, statedb StateDB, address common.Address, assetAddr common.Address) error {
+func setAccountList(baseType int, statedb StateDB, address common.Address, assetAddr common.Address) error {
 	key := address.String() + string(assetlist)
 	v := statedb.GetAccount(address, key)
 
@@ -103,6 +103,22 @@ func setAccountType(baseType int, statedb StateDB, address common.Address, asset
 	}
 	statedb.SetAccount(address, key, b.Bytes())
 	return nil
+}
+
+//GetAccountList .
+func (a *Asset) GetAccountList(baseType int, address common.Address) ([]common.Address, error) {
+	key := address.String() + string(assetlist)
+	v := a.db.GetAccount(address, key)
+
+	var list []common.Address
+	if !bytes.Equal(v, []byte{}) {
+		err := rlp.Decode(bytes.NewReader(v), &list)
+		if err != nil {
+			return nil, fmt.Errorf("Error: %v", err)
+		}
+		return list, nil
+	}
+	return nil, fmt.Errorf("not Account list info")
 }
 
 //Account .
@@ -177,7 +193,7 @@ func (a *Asset) GetNonce(targetAddr common.Address) (uint64, error) {
 			return 0, err
 		}
 	} else {
-		return 0, nil
+		return 0, fmt.Errorf("account not exit")
 	}
 	return account.Nonce, nil
 }
@@ -203,6 +219,41 @@ func (a *Asset) SetNonce(targetAddr common.Address, nonce uint64) error {
 	}
 	a.db.SetAccount(targetAddr, targetAddr.String(), b.Bytes())
 	return nil
+}
+
+// Empty returns whether the account is empty
+func (a *Asset) Empty(targetAddr common.Address) bool {
+	accountByte := a.db.GetAccount(targetAddr, targetAddr.String())
+	var account Account
+	if !bytes.Equal(accountByte, []byte{}) {
+		err := rlp.Decode(bytes.NewReader(accountByte), &account)
+		if err != nil {
+			return true
+		}
+		if account.Nonce == 0 {
+			return true
+		}
+	} else {
+		return true
+	}
+
+	return false
+}
+
+// Exist returns whether the account is exist
+func (a *Asset) Exist(targetAddr common.Address) bool {
+	accountByte := a.db.GetAccount(targetAddr, targetAddr.String())
+	var account Account
+	if !bytes.Equal(accountByte, []byte{}) {
+		err := rlp.Decode(bytes.NewReader(accountByte), &account)
+		if err != nil {
+			return false
+		}
+	} else {
+		return false
+	}
+
+	return true
 }
 
 // //Asset base asset interface

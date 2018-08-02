@@ -17,6 +17,8 @@
 package asset
 
 import (
+	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/zipper-project/z0/common"
@@ -24,12 +26,85 @@ import (
 	"github.com/zipper-project/z0/zdb"
 )
 
-func TestTypes(t *testing.T) {
+func TestGeneralAsset(t *testing.T) {
 	db := zdb.NewMemDatabase()
 	tridb := state.NewDatabase(db)
-	state.New(common.Hash{}, tridb)
+	statedb, err := state.New(common.Hash{}, tridb)
 
-	// if err != nil {
-	// 	t.Errorf("Unexpected error: %v", err)
-	// }
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	asset := NewAsset(statedb)
+	aAddress, err := asset.RegisterAsset(General, common.Address{1}, 1, "test,1000000000,8")
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	err = asset.IssueAsset(General, common.Address{1}, aAddress, big.NewInt(10))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	err = asset.IssueAsset(General, common.Address{1}, aAddress, big.NewInt(30))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	err = asset.IssueAsset(General, common.Address{1}, aAddress, big.NewInt(130))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	v, err := asset.GetBalance(General, common.Address{1}, aAddress)
+	value := v.(*big.Int)
+	fmt.Printf("value:%v\n", value)
+
+	list, err := asset.GetAccountList(General, common.Address{1})
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	fmt.Printf("asset address:%v\n", aAddress)
+	fmt.Printf("list         :%v\n", list[0])
+
+	err = asset.SubBalance(General, common.Address{1}, aAddress, big.NewInt(30))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	v, err = asset.GetBalance(General, common.Address{1}, aAddress)
+	value = v.(*big.Int)
+	fmt.Printf("get value:%v\n", value)
+
+	err = asset.AddBalance(General, common.Address{1}, aAddress, big.NewInt(60))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	v, err = asset.GetBalance(General, common.Address{1}, aAddress)
+	value = v.(*big.Int)
+	fmt.Printf("get value:%v\n", value)
+
+	err = asset.CreateAccount(common.Address{1})
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	v1, err := asset.GetNonce(common.Address{1})
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	fmt.Printf("get nonce:%v\n", v1)
+	err = asset.SetNonce(common.Address{1}, 1)
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	v1, err = asset.GetNonce(common.Address{1})
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	fmt.Printf("get nonce:%v\n", v1)
+
+	boo := asset.Empty(common.Address{2})
+	fmt.Printf("Empty:%v\n", boo)
+
+	boo = asset.Exist(common.Address{2})
+	fmt.Printf("Exist:%v\n", boo)
 }
