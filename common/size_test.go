@@ -27,6 +27,7 @@ func TestStorageSizeString(t *testing.T) {
 		{2381273, "2.38 mB"},
 		{2192, "2.19 kB"},
 		{12, "12.00 B"},
+		{32 * 1024, "32.77 kB"},
 	}
 
 	for _, test := range tests {

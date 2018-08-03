@@ -150,7 +150,7 @@ func (tx *Transaction) Hash() common.Hash {
 	return v
 }
 
-func (tx *Transaction) Payload() []byte       { return common.CopyBytes(tx.Data.Payload) }
+func (tx *Transaction) Payload() []byte    { return common.CopyBytes(tx.Data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.Data.GasLimit }
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.Data.Price) }
 func (tx *Transaction) Nonce() uint64      { return tx.Data.AccountNonce }
@@ -270,3 +270,12 @@ func deserialize(ipdatas, opdatas [][]byte) (inputs []In, outputs []Out) {
 
 // Transactions is a Transaction slice type for basic sorting.
 type Transactions []*Transaction
+
+// Len returns the length of s.
+func (s Transactions) Len() int { return len(s) }
+
+// GetRlp implements Rlpable and returns the i'th element of s in rlp.
+func (s Transactions) GetRlp(i int) []byte {
+	enc, _ := s[i].EncodeRLP()
+	return enc
+}

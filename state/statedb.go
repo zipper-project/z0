@@ -23,6 +23,7 @@ import (
 
 	"bytes"
 
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/crypto"
 	"github.com/zipper-project/z0/types"
@@ -256,7 +257,7 @@ func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObje
 	}
 	var data Account
 	if err := rlp.DecodeBytes(enc, &data); err != nil {
-		fmt.Println("Failed to decode state object", "addr", addr, "err", err)
+		log.Error("Failed to decode state object", "addr", addr, "err", err)
 		return nil
 	}
 	obj := newObject(self, addr, data)
@@ -456,6 +457,6 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) 
 		}
 		return nil
 	})
-	fmt.Println("Trie cache stats after commit", "misses", trie.CacheMisses(), "unloads", trie.CacheUnloads())
+	log.Info("Trie cache stats after commit", "misses", trie.CacheMisses(), "unloads", trie.CacheUnloads())
 	return root, err
 }

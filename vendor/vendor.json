@@ -3,8 +3,20 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "kto0asmOE+Nuhj7T8cvrvIwq2ak=",
+			"path": "github.com/aristanetworks/goarista/monotime",
+			"revision": "32a4de07828f33fc490e6acfbdc211c4f2143ee7",
+			"revisionTime": "2018-07-18T17:25:41Z"
+		},
+		{
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "VfQBQZL87++ZpC7Pn6dJQxjdA7M=",
+			"path": "github.com/ethereum/go-ethereum/common/fdlimit",
+			"revision": "526abe27361c242dbad965c883b0c08858e07c4c",
+			"revisionTime": "2018-07-22T19:11:52Z"
 		},
 		{
 			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
@@ -31,6 +43,12 @@
 			"revisionTime": "2018-06-29T12:15:38Z"
 		},
 		{
+			"checksumSHA1": "Sm6JjHTDnKAOy2DIvz7U1HJ8jiI=",
+			"path": "github.com/ethereum/go-ethereum/log/term",
+			"revision": "2e0391ea84ba02b6a8462209f55019f07d01bdd4",
+			"revisionTime": "2018-07-13T20:53:02Z"
+		},
+		{
 			"checksumSHA1": "h1d2lPZf6j2dW/mIqVnd1RdykDo=",
 			"path": "github.com/golang/snappy",
 			"revision": "2e65f85255dbc3072edf28d6b5b8efc472979f5a",
@@ -53,6 +71,36 @@
 			"path": "github.com/kr/text",
 			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
 			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
+			"checksumSHA1": "SEnjvwVyfuU2xBaOfXfwPD5MZqk=",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "efa589957cd060542a26d2dd7832fd6a6c6c3ade",
+			"revisionTime": "2018-03-10T13:32:14Z"
+		},
+		{
+			"checksumSHA1": "w5RcOnfv5YDr3j2bd1YydkPiZx4=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c",
+			"revisionTime": "2017-11-07T05:05:31Z"
+		},
+		{
+			"checksumSHA1": "A6nZdZ1/lTOVINhIndyw2ZWN9JU=",
+			"path": "github.com/naoina/go-stringutil",
+			"revision": "6b638e95a32d0c1131db0e7fe83775cbea4a0d0b",
+			"revisionTime": "2015-11-18T23:44:43Z"
+		},
+		{
+			"checksumSHA1": "FYM/8R2CqS6PSNAoKl6X5gNJ20A=",
+			"path": "github.com/naoina/toml",
+			"revision": "9fafd69674167c06933b1787ae235618431ce87f",
+			"revisionTime": "2017-09-18T21:04:37Z"
+		},
+		{
+			"checksumSHA1": "wqHUdIsZSwRHQzNTB+1KvJdONdM=",
+			"path": "github.com/naoina/toml/ast",
+			"revision": "9fafd69674167c06933b1787ae235618431ce87f",
+			"revisionTime": "2017-09-18T21:04:37Z"
 		},
 		{
 			"checksumSHA1": "Xnlls27MEcxIHhpRdsiUa2BqcFk=",
@@ -137,6 +185,12 @@
 			"path": "github.com/syndtr/goleveldb/leveldb/util",
 			"revision": "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697",
 			"revisionTime": "2018-06-21T01:01:48Z"
+		},
+		{
+			"checksumSHA1": "su2QDjUzrUO0JnOH9m0cNg0QqsM=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "1b2967e3c290b7c545b3db0deeda16e9be4f98a2",
+			"revisionTime": "2018-07-06T09:56:39Z"
 		},
 		{
 			"checksumSHA1": "9gypWnVZJEaH3jMK9KqOp4xgQD4=",
