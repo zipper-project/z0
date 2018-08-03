@@ -72,7 +72,7 @@ func registerGeneralAsset(db StateDB, accountAddr common.Address, nonce uint64, 
 }
 
 func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.Address, value *big.Int) error {
-	//目标用户余额
+	//get target user  balance
 	key := targetAddr.String() + assetAddr.String()
 	selfAsset := db.GetAccount(targetAddr, key)
 	var balance *big.Int
@@ -86,7 +86,7 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 		setAccountList(General, db, targetAddr, assetAddr)
 	}
 
-	//资产余额
+	//get asset balance
 	var info genAssetInfo
 	asset := db.GetAccount(assetAddr, assetAddr.String())
 	if !bytes.Equal(asset, []byte{}) {
@@ -110,7 +110,7 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 	if err != nil {
 		return err
 	}
-	//保存用户余额
+	//save target user  balance
 	db.SetAccount(targetAddr, key, b.Bytes())
 
 	b = new(bytes.Buffer)
@@ -118,8 +118,7 @@ func issueGeneralAsset(db StateDB, targetAddr common.Address, assetAddr common.A
 	if err != nil {
 		return err
 	}
-	fmt.Printf("资产剩余:%v\n", info)
-	//保存资产余额
+	//save asset balance
 	db.SetAccount(assetAddr, assetAddr.String(), b.Bytes())
 
 	return nil
@@ -135,7 +134,6 @@ func subGeneralBalance(db StateDB, targetAddr common.Address, assetAddr common.A
 		if err != nil {
 			return err
 		}
-		fmt.Printf("balance:%v\n", balance)
 	} else {
 		return fmt.Errorf("Asset not exit")
 	}
