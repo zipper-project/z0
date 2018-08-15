@@ -15,6 +15,7 @@
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package types contains data types related to Z0.
+
 package types
 
 import (
@@ -22,6 +23,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math/big"
+	"sort"
 	"sync/atomic"
 	"time"
 
@@ -32,6 +34,7 @@ import (
 	"github.com/zipper-project/z0/utils/trie"
 )
 
+// EmptyRootHash emptt root hash
 var EmptyRootHash = DeriveSha(Transactions{})
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
@@ -154,31 +157,26 @@ func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*
 func NewBlockWithHeader(header *Header) *Block {
 	return &Block{Head: CopyHeader(header)}
 }
-
-func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.Head.Number) }
-func (b *Block) GasLimit() uint64     { return b.Head.GasLimit }
-func (b *Block) GasUsed() uint64      { return b.Head.GasUsed }
-func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.Head.Difficulty) }
-func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.Head.Time) }
-
-func (b *Block) NumberU64() uint64      { return b.Head.Number.Uint64() }
-func (b *Block) MixDigest() common.Hash { return b.Head.MixDigest }
-
-func (b *Block) Nonce() uint64            { return binary.BigEndian.Uint64(b.Head.Nonce[:]) }
-func (b *Block) Coinbase() common.Address { return b.Head.Coinbase }
-func (b *Block) Root() common.Hash        { return b.Head.Root }
-func (b *Block) ParentHash() common.Hash  { return b.Head.ParentHash }
-func (b *Block) TxHash() common.Hash      { return b.Head.TxHash }
-func (b *Block) ReceiptHash() common.Hash { return b.Head.ReceiptHash }
-func (b *Block) Extra() []byte            { return common.CopyBytes(b.Head.Extra) }
-func (b *Block) Header() *Header          { return CopyHeader(b.Head) }
-func (b *Block) Body() *Body              { return &Body{b.Txs} }
+func (b *Block) Transactions() Transactions { return b.Txs }
+func (b *Block) Number() *big.Int           { return new(big.Int).Set(b.Head.Number) }
+func (b *Block) GasLimit() uint64           { return b.Head.GasLimit }
+func (b *Block) GasUsed() uint64            { return b.Head.GasUsed }
+func (b *Block) Difficulty() *big.Int       { return new(big.Int).Set(b.Head.Difficulty) }
+func (b *Block) Time() *big.Int             { return new(big.Int).Set(b.Head.Time) }
+func (b *Block) NumberU64() uint64          { return b.Head.Number.Uint64() }
+func (b *Block) MixDigest() common.Hash     { return b.Head.MixDigest }
+func (b *Block) Nonce() uint64              { return binary.BigEndian.Uint64(b.Head.Nonce[:]) }
+func (b *Block) Coinbase() common.Address   { return b.Head.Coinbase }
+func (b *Block) Root() common.Hash          { return b.Head.Root }
+func (b *Block) ParentHash() common.Hash    { return b.Head.ParentHash }
+func (b *Block) TxHash() common.Hash        { return b.Head.TxHash }
+func (b *Block) ReceiptHash() common.Hash   { return b.Head.ReceiptHash }
+func (b *Block) Extra() []byte              { return common.CopyBytes(b.Head.Extra) }
+func (b *Block) Header() *Header            { return CopyHeader(b.Head) }
+func (b *Block) Body() *Body                { return &Body{b.Txs} }
 
 // EncodeRLP serializes b into the RLP block format.
 func (b *Block) EncodeRLP() ([]byte, error) {
-	for _, tx := range b.Txs {
-		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, false)
-	}
 	return rlp.EncodeToBytes(b)
 }
 
@@ -187,9 +185,6 @@ func (b *Block) DecodeRLP(input []byte) error {
 	err := rlp.Decode(bytes.NewReader(input), &b)
 	if err == nil {
 		b.size.Store(common.StorageSize(len(input)))
-		for _, tx := range b.Txs {
-			tx.Inputs, tx.Outputs = deserialize(tx.Data.Inputs, tx.Data.Outputs)
-		}
 	}
 	return err
 }
@@ -199,9 +194,6 @@ func (b *Block) Marshal() ([]byte, error) {
 	type Block struct {
 		Header       *Header
 		Transactions Transactions
-	}
-	for _, tx := range b.Txs {
-		tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, true)
 	}
 	var block Block
 	block.Header = b.Head
@@ -269,3 +261,28 @@ func DeriveSha(list DerivableList) common.Hash {
 type Body struct {
 	Transactions []*Transaction
 }
+
+type Blocks []*Block
+
+type BlockBy func(b1, b2 *Block) bool
+
+func (self BlockBy) Sort(blocks Blocks) {
+	bs := blockSorter{
+		blocks: blocks,
+		by:     self,
+	}
+	sort.Sort(bs)
+}
+
+type blockSorter struct {
+	blocks Blocks
+	by     func(b1, b2 *Block) bool
+}
+
+func (self blockSorter) Len() int { return len(self.blocks) }
+func (self blockSorter) Swap(i, j int) {
+	self.blocks[i], self.blocks[j] = self.blocks[j], self.blocks[i]
+}
+func (self blockSorter) Less(i, j int) bool { return self.by(self.blocks[i], self.blocks[j]) }
+
+func Number(b1, b2 *Block) bool { return b1.Head.Number.Cmp(b2.Head.Number) < 0 }

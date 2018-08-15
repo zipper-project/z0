@@ -139,12 +139,12 @@ func (s Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, 
 // It does not uniquely identify the transaction.
 func (s Signer) Hash(tx *Transaction) common.Hash {
 	return rlpHash([]interface{}{
-		tx.Data.AccountNonce,
+		tx.Data.Nonce,
 		tx.Data.Price,
 		tx.Data.GasLimit,
 		tx.Data.Inputs,
 		tx.Data.Outputs,
-		tx.Data.Payload,
+		tx.Data.Extra,
 		s.chainID, uint(0), uint(0),
 	})
 }

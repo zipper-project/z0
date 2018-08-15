@@ -22,14 +22,15 @@ import (
 	"math/big"
 
 	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/types"
 	"github.com/zipper-project/z0/utils/rlp"
 )
 
 const (
-	// General account
-	General = iota
-	// Utxo account
-	Utxo
+	// AccountModel account
+	AccountModel = iota
+	// UtxoModel account
+	UtxoModel
 )
 
 var (
@@ -47,66 +48,114 @@ func NewAsset(db StateDB) *Asset {
 	return &Asset{db}
 }
 
+//InitZip Genesis asset ZIP
+func InitZip(db StateDB, total *big.Int, decimals uint64) error {
+	asset := db.GetAccount(types.ZipAssetID, types.ZipAssetID.String())
+	if !bytes.Equal(asset, []byte{}) {
+		return nil
+	}
+	info := &AccountAssetInfo{
+		Name:     "zipper",
+		Symbol:   "ZIP",
+		Total:    total,
+		Decimals: decimals,
+		Owner:    types.ZipAccount}
+	//save zip asset info
+	b := new(bytes.Buffer)
+	err := rlp.Encode(b, &info)
+	if err != nil {
+		return err
+	}
+	assetAddr := types.ZipAssetID
+	db.SetAccount(assetAddr, assetAddr.String(), b.Bytes())
+
+	//save base type
+	assetTypeKey := assetAddr.String() + string(assetType)
+	b = new(bytes.Buffer)
+	err = rlp.Encode(b, uint64(AccountModel))
+	if err != nil {
+		return err
+	}
+	db.SetAccount(assetAddr, assetTypeKey, b.Bytes())
+	//issue balance to owner
+	err = setAccountList(AccountModel, db, info.Owner, assetAddr)
+	if err != nil {
+		return err
+	}
+	key := info.Owner.String() + assetAddr.String()
+	b = new(bytes.Buffer)
+	err = rlp.Encode(b, info.Total)
+	if err != nil {
+		return err
+	}
+	db.SetAccount(info.Owner, key, b.Bytes())
+	return nil
+}
+
 // RegisterAsset create asset
-func (a *Asset) RegisterAsset(baseType int, accountAddr common.Address, nonce uint64, desc string) (common.Address, error) {
+func (a *Asset) RegisterAsset(baseType int, accountAddr common.Address, desc string) (common.Address, error) {
 	var addr common.Address
 	var err error
 	switch baseType {
-	case General:
-		addr, err = registerGeneralAsset(a.db, accountAddr, nonce, desc)
+	case AccountModel:
+		addr, err = registerAccountAsset(a.db, accountAddr, a.GetNonce(accountAddr), desc)
 		if err != nil {
 			return addr, err
 		}
-	case Utxo:
+	case UtxoModel:
 		fmt.Println("Utxo")
 	}
 	return addr, nil
 }
 
-// IssueAsset issue asset
-func (a *Asset) IssueAsset(baseType int, targetAddr common.Address, assetAddr common.Address, value interface{}) error {
+// SetNewOwner .
+func (a *Asset) SetNewOwner(oldOwner common.Address, assetAddr common.Address, newOwner common.Address) (bool, error) {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		return false, err
+	}
+	var ok bool
 	switch baseType {
-	case General:
+	case AccountModel:
+		ok, err = setAccountNewOwner(a.db, oldOwner, assetAddr, newOwner)
+		if err != nil {
+			return false, err
+		}
+	case UtxoModel:
+		fmt.Println("Utxo")
+	}
+	return ok, nil
+}
+
+// IssueAsset issue asset
+func (a *Asset) IssueAsset(ownerAddr common.Address, assetAddr common.Address, value interface{}) error {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		return err
+	}
+	switch baseType {
+	case AccountModel:
 		v := value.(*big.Int)
-		err := issueGeneralAsset(a.db, targetAddr, assetAddr, v)
+		err := issueAccountAsset(a.db, ownerAddr, assetAddr, v)
 		if err != nil {
 			return err
 		}
-	case Utxo:
+	case UtxoModel:
 		fmt.Println("Utxo")
 	}
 	return nil
 }
 
-func setAccountList(baseType int, statedb StateDB, address common.Address, assetAddr common.Address) error {
-	key := address.String() + string(assetlist)
-	v := statedb.GetAccount(address, key)
-
-	var list []common.Address
-	if !bytes.Equal(v, []byte{}) {
-		err := rlp.Decode(bytes.NewReader(v), &list)
-		if err != nil {
-			return fmt.Errorf("Error: %v", err)
-		}
-
-		for _, t := range list {
-			if bytes.Equal(t.Bytes(), assetAddr.Bytes()) {
-				return nil
-			}
-		}
-	}
-	list = append(list, assetAddr)
-	b := new(bytes.Buffer)
-	err := rlp.Encode(b, list)
-	if err != nil {
-		return err
-	}
-	statedb.SetAccount(address, key, b.Bytes())
-	return nil
+//UserAsset user asset info
+type UserAsset struct {
+	baseType  uint
+	assetAddr common.Address
+	assetName string
+	balance   *big.Int
 }
 
-//GetAccountList .
-func (a *Asset) GetAccountList(baseType int, address common.Address) ([]common.Address, error) {
+//GetUserAssets .
+func (a *Asset) GetUserAssets(address common.Address) ([]UserAsset, error) {
 	key := address.String() + string(assetlist)
 	v := a.db.GetAccount(address, key)
 
@@ -116,8 +165,36 @@ func (a *Asset) GetAccountList(baseType int, address common.Address) ([]common.A
 		if err != nil {
 			return nil, fmt.Errorf("Error: %v", err)
 		}
-		return list, nil
+
+		assets := make([]UserAsset, 0)
+		for _, assetAddr := range list {
+			baseType, err := a.getAssetType(assetAddr)
+			if err != nil {
+				return nil, err
+			}
+			switch baseType {
+			case AccountModel:
+				balance, err := getAccountBalance(a.db, address, assetAddr)
+				if err != nil {
+					return nil, err
+				}
+				info, err := getAccountAssetInfo(a.db, assetAddr)
+				if err != nil {
+					return nil, err
+				}
+				asset := UserAsset{
+					baseType:  AccountModel,
+					assetAddr: assetAddr,
+					assetName: info.Symbol,
+					balance:   balance}
+				assets = append(assets, asset)
+			case UtxoModel:
+				fmt.Println("Utxo")
+			}
+		}
+		return assets, nil
 	}
+
 	return nil, fmt.Errorf("not Account list info")
 }
 
@@ -139,63 +216,93 @@ func (a *Asset) CreateAccount(addr common.Address) error {
 }
 
 // SubBalance sub account balance
-func (a *Asset) SubBalance(baseType int, targetAddr common.Address, assetAddr common.Address, value interface{}) error {
+func (a *Asset) SubBalance(targetAddr common.Address, assetAddr common.Address, value interface{}) error {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		return err
+	}
 	switch baseType {
-	case General:
+	case AccountModel:
 		v := value.(*big.Int)
-		err := subGeneralBalance(a.db, targetAddr, assetAddr, v)
+		err := subAccountBalance(a.db, targetAddr, assetAddr, v)
 		if err != nil {
 			return err
 		}
-	case Utxo:
+	case UtxoModel:
 		fmt.Println("Utxo")
 	}
 	return nil
 }
 
 // AddBalance add account balance
-func (a *Asset) AddBalance(baseType int, targetAddr common.Address, assetAddr common.Address, value interface{}) error {
+func (a *Asset) AddBalance(targetAddr common.Address, assetAddr common.Address, value interface{}) error {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		return err
+	}
 	switch baseType {
-	case General:
+	case AccountModel:
 		v := value.(*big.Int)
-		err := addGeneralBalance(a.db, targetAddr, assetAddr, v)
+		err := addAccountlBalance(a.db, targetAddr, assetAddr, v)
 		if err != nil {
 			return err
 		}
-	case Utxo:
+	case UtxoModel:
 		fmt.Println("Utxo")
 	}
 	return nil
 }
 
-// GetBalance get account balance
-func (a *Asset) GetBalance(baseType int, targetAddr common.Address, assetAddr common.Address) (interface{}, error) {
+// EnoughBalance .
+func (a *Asset) EnoughBalance(targetAddr common.Address, assetAddr common.Address, value interface{}) (bool, error) {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		return false, err
+	}
+	var enough bool
 	switch baseType {
-	case General:
-		balance, err := getGeneralBalance(a.db, targetAddr, assetAddr)
+	case AccountModel:
+		v := value.(*big.Int)
+		enough, err = enoughAccountBalance(a.db, targetAddr, assetAddr, v)
 		if err != nil {
-			return nil, err
+			return false, err
 		}
-		return balance, nil
-	case Utxo:
+	case UtxoModel:
 		fmt.Println("Utxo")
 	}
-	return nil, nil
+	return enough, nil
+}
+
+// GetBalance get account balance
+func (a *Asset) GetBalance(targetAddr common.Address, assetAddr common.Address) interface{} {
+	baseType, err := a.getAssetType(assetAddr)
+	if err != nil {
+		panic("GetBalance error")
+	}
+	switch baseType {
+	case AccountModel:
+		balance, err := getAccountBalance(a.db, targetAddr, assetAddr)
+		if err != nil {
+			panic("GetBalance error")
+		}
+		return balance
+	case UtxoModel:
+		fmt.Println("Utxo")
+	}
+	return nil
 }
 
 // GetNonce get nonce
-func (a *Asset) GetNonce(targetAddr common.Address) (uint64, error) {
+func (a *Asset) GetNonce(targetAddr common.Address) uint64 {
 	accountByte := a.db.GetAccount(targetAddr, targetAddr.String())
 	var account Account
 	if !bytes.Equal(accountByte, []byte{}) {
 		err := rlp.Decode(bytes.NewReader(accountByte), &account)
 		if err != nil {
-			return 0, err
+			panic("GetNonce error")
 		}
-	} else {
-		return 0, fmt.Errorf("account not exit")
 	}
-	return account.Nonce, nil
+	return account.Nonce
 }
 
 // SetNonce set nonce
@@ -256,40 +363,46 @@ func (a *Asset) Exist(targetAddr common.Address) bool {
 	return true
 }
 
-// //Asset base asset interface
-// type Asset interface {
-// 	Pay() error
-// 	Revenue() error
-// }
+//
+func (a *Asset) getAssetType(assetAddr common.Address) (int, error) {
+	assetTypeKey := assetAddr.String() + string(assetType)
+	v := a.db.GetAccount(assetAddr, assetTypeKey)
 
-// //Account base account interface
-// type Account interface {
-// 	MakeAsset(value *big.Int, db state.StateDB) Asset
-// 	GetBalance() *big.Int
-// }
+	var utype uint64
+	if !bytes.Equal(v, []byte{}) {
+		err := rlp.Decode(bytes.NewReader(v), &utype)
+		if err != nil {
+			return -1, fmt.Errorf("Error: %v", err)
+		}
+	} else {
+		return -1, fmt.Errorf("Asset not create")
+	}
+	return int(utype), nil
+}
 
-// //GetAccountType get all account type of the user
-// func GetAccountType(address common.Address, statedb state.StateDB) ([]uint, error) {
-// 	key := address.String() + string(accountType)
-// 	val := statedb.GetAccount(address, key)
-// 	var types []uint
-// 	err := rlp.Decode(bytes.NewReader(val), &types)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("Error: %v", err)
-// 	}
-// 	return types, nil
-// }
+func setAccountList(baseType int, statedb StateDB, address common.Address, assetAddr common.Address) error {
+	key := address.String() + string(assetlist)
+	v := statedb.GetAccount(address, key)
 
-// //GetZipAccount get zipaccount information of the user
-// func GetZipAccount(address common.Address, statedb state.StateDB) (*ZipAccount, error) {
-// 	key := address.String() + string(account) + strconv.Itoa(Zip)
+	var list []common.Address
+	if !bytes.Equal(v, []byte{}) {
+		err := rlp.Decode(bytes.NewReader(v), &list)
+		if err != nil {
+			return fmt.Errorf("Error: %v", err)
+		}
 
-// 	val := statedb.GetAccount(address, key)
-// 	var account ZipAccount
-// 	err := rlp.Decode(bytes.NewReader(val), &account)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("Error: %v", err)
-// 	}
-
-// 	return newZipAccount(account.Balance, address), nil
-// }
+		for _, t := range list {
+			if bytes.Equal(t.Bytes(), assetAddr.Bytes()) {
+				return nil
+			}
+		}
+	}
+	list = append(list, assetAddr)
+	b := new(bytes.Buffer)
+	err := rlp.Encode(b, list)
+	if err != nil {
+		return err
+	}
+	statedb.SetAccount(address, key, b.Bytes())
+	return nil
+}

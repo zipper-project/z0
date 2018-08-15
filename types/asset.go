@@ -18,111 +18,40 @@
 package types
 
 import (
-	"bytes"
-	"encoding/json"
 	"math/big"
+	"reflect"
 
 	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/utils/rlp"
 )
 
-// In represents an asset input in the asset
-type In interface {
-	MarshalJSON() []byte
-	EncodeRLP() []byte
-}
+var (
+	//ZipAccount chain asset
+	ZipAssetID = common.Address{1}
+	//ZipAccount chain asset
+	ZipAccount = common.Address{2}
+)
 
-// Out represents an asset output in the asset
-type Out interface {
-	MarshalJSON() []byte
-	EncodeRLP() []byte
-}
+var (
+	AMInputType  = reflect.TypeOf(AMInput{})
+	AMOutputType = reflect.TypeOf(AMOutput{})
+	DefaultType  = reflect.TypeOf([]interface{}{})
+)
 
 const (
 	// AccountModelType asset based account model
 	AccountModelType uint8 = iota
 )
 
-const (
-	// InType input struct type
-	InType uint8 = iota
-	// OutType output struct type
-	OutType
-)
-
-// InDecodeRLP decode assert
-func InDecodeRLP(data []byte) In {
-	var (
-		result In
-		err    error
-	)
-	switch uint8(data[0]) {
-	case AccountModelType:
-		in := new(AMInput)
-		err = rlp.Decode(bytes.NewReader(data[1:]), in)
-		result = in
-	}
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-// OutDecodeRLP decode assert
-func OutDecodeRLP(data []byte) Out {
-	var (
-		result Out
-		err    error
-	)
-	switch uint8(data[0]) {
-	case AccountModelType:
-		out := new(AMOutput)
-		err = rlp.Decode(bytes.NewReader(data[1:]), out)
-		result = out
-	}
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 type AccountModel struct {
 }
 
 type AMInput struct {
-	Amount *big.Int `json:"amount"    gencodec:"required"`
+	AssertID *common.Address `json:"assertid"`
+	Payload  []byte          `json:"payload"`
 }
-
-func (a *AMInput) MarshalJSON() []byte {
-	bytes, err := json.Marshal(a)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
-}
-func (a *AMInput) EncodeRLP() []byte { return encodeRLP(a, AccountModelType) }
 
 type AMOutput struct {
-	Address *common.Address `json:"address"    gencodec:"required"`
-}
-
-func (a *AMOutput) MarshalJSON() []byte {
-	bytes, err := json.Marshal(a)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
-}
-
-func (a *AMOutput) EncodeRLP() []byte { return encodeRLP(a, AccountModelType) }
-
-func encodeRLP(val interface{}, modelType uint8) []byte {
-	bytes, err := rlp.EncodeToBytes(val)
-	if err != nil {
-		panic(err)
-	}
-	result := make([]byte, len(bytes)+1)
-	result[0] = byte(modelType)
-	copy(result[1:], bytes)
-	return result
+	AssertID *common.Address `json:"assertid"`
+	Address  *common.Address `json:"to"`
+	Value    *big.Int        `josn:"value"`
 }

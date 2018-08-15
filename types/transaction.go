@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
-	"sync"
+	"reflect"
 	"sync/atomic"
 
 	"github.com/zipper-project/z0/common"
@@ -34,9 +34,7 @@ var ErrInvalidSig = errors.New("invalid transaction v, r, s values")
 
 // Transaction represents an entire transaction in the block.
 type Transaction struct {
-	Data    txdata
-	Inputs  []In
-	Outputs []Out
+	Data txdata
 
 	// caches
 	hash atomic.Value
@@ -45,13 +43,12 @@ type Transaction struct {
 }
 
 type txdata struct {
-	AccountNonce uint64   `json:"nonce"   `
-	Price        *big.Int `json:"gasPrice"`
-	GasLimit     uint64   `json:"gas"     `
-	AssertID     string   `json:"assertid"`
-	Inputs       [][]byte `json:"inputs"`
-	Outputs      [][]byte `json:"outputs"`
-	Payload      []byte   `json:"input"   `
+	Nonce    uint64        `json:"nonce"   `
+	Price    *big.Int      `json:"gasPrice"`
+	GasLimit uint64        `json:"gas"     `
+	Inputs   []interface{} `json:"inputs"`
+	Outputs  []interface{} `json:"outputs"`
+	Extra    []byte        `json:"extra"`
 
 	// Signature values
 	V *big.Int `json:"v"`
@@ -63,23 +60,22 @@ type txdata struct {
 }
 
 // NewTransaction initialize transaction
-func NewTransaction(nonce uint64, assertID string, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, assertID, gasLimit, gasPrice, data)
+func NewTransaction(nonce uint64, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+	return newTransaction(nonce, gasLimit, gasPrice, data)
 }
 
-func newTransaction(nonce uint64, assertID string, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+func newTransaction(nonce uint64, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
 	d := txdata{
-		AccountNonce: nonce,
-		Payload:      data,
-		GasLimit:     gasLimit,
-		AssertID:     assertID,
-		Price:        new(big.Int),
-		V:            new(big.Int),
-		R:            new(big.Int),
-		S:            new(big.Int),
+		Nonce:    nonce,
+		Extra:    data,
+		GasLimit: gasLimit,
+		Price:    new(big.Int),
+		V:        new(big.Int),
+		R:        new(big.Int),
+		S:        new(big.Int),
 	}
 	if gasPrice != nil {
 		d.Price.Set(gasPrice)
@@ -88,14 +84,13 @@ func newTransaction(nonce uint64, assertID string, gasLimit uint64, gasPrice *bi
 }
 
 // WithInput add transaction input
-func (tx *Transaction) WithInput(inputs []In) { tx.Inputs = inputs }
+func (tx *Transaction) WithInput(inputs ...interface{}) { tx.Data.Inputs = inputs }
 
 // WithOutput add transaction output
-func (tx *Transaction) WithOutput(outputs []Out) { tx.Outputs = outputs }
+func (tx *Transaction) WithOutput(outputs ...interface{}) { tx.Data.Outputs = outputs }
 
 // EncodeRLP implements rlp.Encoder
 func (tx *Transaction) EncodeRLP() ([]byte, error) {
-	tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, false)
 	return rlp.EncodeToBytes(&tx.Data)
 }
 
@@ -104,39 +99,8 @@ func (tx *Transaction) DecodeRLP(data []byte) error {
 	err := rlp.Decode(bytes.NewReader(data), &tx.Data)
 	if err == nil {
 		tx.size.Store(common.StorageSize(len(data)))
-		tx.Inputs, tx.Outputs = deserialize(tx.Data.Inputs, tx.Data.Outputs)
 	}
 	return err
-}
-
-// MarshalJSON encodes the web3 RPC transaction format.
-func (tx *Transaction) MarshalJSON() ([]byte, error) {
-	hash := tx.Hash()
-	data := tx.Data
-	data.Hash = &hash
-	tx.Data.Inputs, tx.Data.Outputs = serialize(tx.Inputs, tx.Outputs, true)
-	return json.Marshal(&data)
-}
-
-// UnmarshalJSON decodes the web3 RPC transaction format.
-func (tx *Transaction) UnmarshalJSON(input []byte) error {
-	var dec txdata
-	if err := json.Unmarshal(input, dec); err != nil {
-		return err
-	}
-	var V byte
-	if isProtectedV(dec.V) {
-		chainID := deriveChainID(dec.V).Uint64()
-		V = byte(dec.V.Uint64() - 35 - 2*chainID)
-	} else {
-		V = byte(dec.V.Uint64() - 27)
-	}
-	if !crypto.ValidateSignatureValues(V, dec.R, dec.S, false) {
-		return ErrInvalidSig
-	}
-
-	*tx = Transaction{Data: dec}
-	return nil
 }
 
 // Hash hashes the RLP encoding of tx.
@@ -150,17 +114,79 @@ func (tx *Transaction) Hash() common.Hash {
 	return v
 }
 
-func (tx *Transaction) Payload() []byte    { return common.CopyBytes(tx.Data.Payload) }
+func (tx *Transaction) Extra() []byte      { return common.CopyBytes(tx.Data.Extra) }
 func (tx *Transaction) Gas() uint64        { return tx.Data.GasLimit }
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.Data.Price) }
-func (tx *Transaction) Nonce() uint64      { return tx.Data.AccountNonce }
-func (tx *Transaction) AssertID() string   { return tx.Data.AssertID }
+func (tx *Transaction) Nonce() uint64      { return tx.Data.Nonce }
 
-// To returns the recipient address of the transaction.
-// It returns nil if the transaction is a contract creation.
-func (tx *Transaction) To() *common.Address {
-	//todo
+func (tx *Transaction) Value() map[common.Address]map[common.Address]*big.Int {
+	values := make(map[common.Address]map[common.Address]*big.Int)
+	for _, v := range tx.Data.Outputs {
+		if reflect.TypeOf(v) == AMOutputType {
+			output := v.(AMOutput)
+			if values[*output.Address] == nil {
+				values[*output.Address] = make(map[common.Address]*big.Int)
+			}
+			values[*output.Address][*output.AssertID] = output.Value
+		} else {
+			// todo utxo
+		}
+	}
 	return nil
+}
+
+func (tx *Transaction) GetInputs() []interface{} {
+	results := make([]interface{}, len(tx.Data.Inputs))
+	for k, v := range tx.Data.Inputs {
+		switch reflect.TypeOf(v) {
+		case AMInputType:
+			results[k] = v
+		case DefaultType:
+			if len(v.([]interface{})) == 2 {
+				amIn := &AMInput{}
+				b, _ := rlp.EncodeToBytes(v)
+				rlp.DecodeBytes(b, amIn)
+				results[k] = *amIn
+			} else {
+				// todo utxo
+			}
+		}
+	}
+	return results
+}
+func (tx *Transaction) GetOutputs() []interface{} {
+	results := make([]interface{}, len(tx.Data.Inputs))
+	for k, v := range tx.Data.Outputs {
+		switch reflect.TypeOf(v) {
+		case AMOutputType:
+			results[k] = v
+		case DefaultType:
+			if len(v.([]interface{})) == 3 {
+				amOut := &AMOutput{}
+				b, _ := rlp.EncodeToBytes(v)
+				rlp.DecodeBytes(b, amOut)
+				results[k] = *amOut
+			} else {
+				// todo utxo
+			}
+		}
+	}
+	return results
+}
+
+// Cost returns amount + gasprice * gaslimit.
+func (tx *Transaction) Cost() *big.Int {
+	amount := big.NewInt(0)
+	for _, v := range tx.Data.Outputs {
+		if reflect.TypeOf(v) == AMOutputType {
+			output := v.(AMOutput)
+			if output.AssertID.Hex() == ZipAssetID.Hex() {
+				amount.Add(amount, output.Value)
+			}
+		}
+	}
+	total := new(big.Int).Mul(tx.Data.Price, new(big.Int).SetUint64(tx.Data.GasLimit))
+	return total.Add(total, amount)
 }
 
 // Size returns the true RLP encoded storage size of the transaction, either by
@@ -219,53 +245,33 @@ func deriveChainID(v *big.Int) *big.Int {
 	return v.Div(v, big.NewInt(2))
 }
 
-// serialize if flag = true ,marshal to json else encodeRLP
-func serialize(inputs []In, outputs []Out, flag bool) (ipdata, opdata [][]byte) {
-	ipdata, opdata = make([][]byte, len(inputs)), make([][]byte, len(outputs))
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		for k, in := range inputs {
-			if flag {
-				ipdata[k] = in.MarshalJSON()
-			} else {
-				ipdata[k] = in.EncodeRLP()
-			}
-		}
-		wg.Done()
-	}()
-	go func() {
-		for k, out := range outputs {
-			if flag {
-				opdata[k] = out.MarshalJSON()
-			} else {
-				opdata[k] = out.EncodeRLP()
-			}
-		}
-		wg.Done()
-	}()
-	wg.Wait()
-	return
+// MarshalJSON encodes the web3 RPC transaction format.
+func (tx *Transaction) MarshalJSON() ([]byte, error) {
+	hash := tx.Hash()
+	data := tx.Data
+	data.Hash = &hash
+	return json.Marshal(&data)
 }
 
-func deserialize(ipdatas, opdatas [][]byte) (inputs []In, outputs []Out) {
-	inputs, outputs = make([]In, len(ipdatas)), make([]Out, len(opdatas))
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		for k, ipdata := range ipdatas {
-			inputs[k] = InDecodeRLP(ipdata)
-		}
-		wg.Done()
-	}()
-	go func() {
-		for k, opdata := range opdatas {
-			outputs[k] = OutDecodeRLP(opdata)
-		}
-		wg.Done()
-	}()
-	wg.Wait()
-	return inputs, outputs
+// UnmarshalJSON decodes the web3 RPC transaction format.
+func (tx *Transaction) UnmarshalJSON(input []byte) error {
+	var dec txdata
+	if err := json.Unmarshal(input, &dec); err != nil {
+		return err
+	}
+	var V byte
+	if isProtectedV(dec.V) {
+		chainID := deriveChainID(dec.V).Uint64()
+		V = byte(dec.V.Uint64() - 35 - 2*chainID)
+	} else {
+		V = byte(dec.V.Uint64() - 27)
+	}
+	if !crypto.ValidateSignatureValues(V, dec.R, dec.S, false) {
+		return ErrInvalidSig
+	}
+
+	*tx = Transaction{Data: dec}
+	return nil
 }
 
 // Transactions is a Transaction slice type for basic sorting.
@@ -279,3 +285,9 @@ func (s Transactions) GetRlp(i int) []byte {
 	enc, _ := s[i].EncodeRLP()
 	return enc
 }
+
+type TxByNonce Transactions
+
+func (s TxByNonce) Len() int           { return len(s) }
+func (s TxByNonce) Less(i, j int) bool { return s[i].Data.Nonce < s[j].Data.Nonce }
+func (s TxByNonce) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }

@@ -23,9 +23,13 @@ import (
 )
 
 var (
+	addr     = common.HexToAddress("0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed")
+	assertID = common.HexToAddress("0xcc8507ed53e44c9d86a158e876c151634247f514")
+	amInput  = AMInput{AssertID: &assertID, Payload: []byte("payload")}
+	amOutput = AMOutput{AssertID: &assertID, Address: &addr, Value: big.NewInt(10000)}
+
 	testTx = NewTransaction(
 		3,
-		"123456",
 		2000,
 		big.NewInt(1),
 		[]byte("test transaction"),
@@ -33,21 +37,22 @@ var (
 )
 
 func TestTransactionEncodeAndDecode(t *testing.T) {
-	bytes, _ := testTx.MarshalJSON()
-	t.Log(string(bytes))
+	testTx.WithInput(amInput)
+	testTx.WithOutput(amOutput)
+	bytes, err := testTx.MarshalJSON()
+	t.Log(string(bytes), err)
 
-	testTx.WithInput([]In{amInput})
-	testTx.WithOutput([]Out{amOutput})
 	{
 		bytes, _ := testTx.EncodeRLP()
 		newTx := &Transaction{}
 		newTx.DecodeRLP(bytes)
 
-		common.AssertEquals(t, newTx.Payload(), testTx.Payload())
+		common.AssertEquals(t, newTx.Extra(), testTx.Extra())
 		common.AssertEquals(t, newTx.Gas(), testTx.Gas())
 		common.AssertEquals(t, newTx.GasPrice(), testTx.GasPrice())
 		common.AssertEquals(t, newTx.Nonce(), testTx.Nonce())
-		common.AssertEquals(t, newTx.AssertID(), testTx.AssertID())
+		common.AssertEquals(t, newTx.GetInputs(), []interface{}{amInput})
+		common.AssertEquals(t, newTx.GetOutputs(), []interface{}{amOutput})
 
 		tmpBytes, _ := newTx.EncodeRLP()
 		common.AssertEquals(t, bytes, tmpBytes)

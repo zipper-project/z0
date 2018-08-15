@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/crypto"
 	"github.com/zipper-project/z0/utils/rlp"
@@ -60,7 +61,7 @@ func CacheAccountCopy(origin map[string][]byte) map[string][]byte {
 
 type stateObject struct {
 	address  common.Address
-	addrHash common.Hash // hash of ethereum address of the account
+	addrHash common.Hash // hash of  address of the account
 	data     Account
 	db       *StateDB
 

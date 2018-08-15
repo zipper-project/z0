@@ -1,4 +1,4 @@
-// Copyright 2018 The zipper team Authors
+// Copyright 2018 The zipper Authors
 // This file is part of the z0 library.
 //
 // The z0 library is free software: you can redistribute it and/or modify
@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the z0 library. If not, see <http://www.gnu.org/licenses/>.
 
-package core
+package params
 
-type Ledger struct {
-}
+const (
+	Ziper = 1e18
+)

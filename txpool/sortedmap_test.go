@@ -27,7 +27,7 @@ import (
 func TestPutAndGetAndRemove(t *testing.T) {
 	sm := newTxSortedMap()
 	nonce := uint64(2)
-	tx := types.NewTransaction(nonce, "", 0, nil, nil)
+	tx := types.NewTransaction(nonce, 0, nil, nil)
 	sm.Put(tx)
 	common.AssertEquals(t, sm.Get(nonce), tx)
 

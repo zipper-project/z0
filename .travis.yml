@@ -20,5 +20,9 @@ go:
   - 1.9.2
 
 install:
+  - mkdir -p $HOME/gopath/src/github.com/zipper-project/z0
+  - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/zipper-project/z0
+  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/zipper-project/z0
+  - cd $HOME/gopath/src/github.com/zipper-project/z0
   - make test
   - make all  

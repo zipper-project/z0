@@ -28,11 +28,10 @@ import (
 // the executable/pending queue; and for storing gapped transactions for the non-
 // executable/future queue, with minor behavioral changes.
 type txList struct {
-	strict bool         // Whether nonces are strictly continuous or not
-	txs    *txSortedMap // Heap indexed sorted hash map of the transactions
-
-	costcap *big.Int // Price of the highest costing transaction (reset only if exceeds balance)
-	gascap  uint64   // Gas limit of the highest spending transaction (reset only if exceeds block limit)
+	strict  bool         // Whether nonces are strictly continuous or not
+	txs     *txSortedMap // Heap indexed sorted hash map of the transactions
+	costcap *big.Int     // Price of the highest costing transaction (reset only if exceeds balance)
+	gascap  uint64       // Gas limit of the highest spending transaction (reset only if exceeds block limit)
 }
 
 // newTxList create a new transaction list for maintaining nonce-indexable fast,
@@ -70,9 +69,9 @@ func (l *txList) Add(tx *types.Transaction, priceBump uint64) (bool, *types.Tran
 	}
 	// Otherwise overwrite the old transaction with the current one
 	l.txs.Put(tx)
-	// if cost := tx.Cost(); l.costcap.Cmp(cost) < 0 {
-	// 	l.costcap = cost
-	// }
+	if cost := tx.Cost(); l.costcap.Cmp(cost) < 0 {
+		l.costcap = cost
+	}
 	if gas := tx.Gas(); l.gascap < gas {
 		l.gascap = gas
 	}
@@ -104,10 +103,10 @@ func (l *txList) Filter(costLimit *big.Int, gasLimit uint64) (types.Transactions
 	l.gascap = gasLimit
 
 	// Filter out all the transactions above the account's funds
-	// removed := l.txs.Filter(func(tx *types.Transaction) bool { return tx.Cost().Cmp(costLimit) > 0 || tx.Gas() > gasLimit })
+	removed := l.txs.Filter(func(tx *types.Transaction) bool { return tx.Cost().Cmp(costLimit) > 0 || tx.Gas() > gasLimit })
 
 	// If the list was strict, filter anything above the lowest nonce
-	var invalids, removed types.Transactions
+	var invalids types.Transactions
 
 	if l.strict && len(removed) > 0 {
 		lowest := uint64(math.MaxUint64)

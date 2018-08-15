@@ -17,13 +17,13 @@
 package state
 
 import (
-	"sync"
 	"fmt"
+	"sync"
 
-	"github.com/zipper-project/z0/common"
-	"github.com/zipper-project/z0/zdb"
-	"github.com/zipper-project/z0/utils/trie"
 	"github.com/hashicorp/golang-lru"
+	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/utils/trie"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // Trie cache generation limit after which to evict trie nodes from memory.
@@ -59,7 +59,7 @@ type Database interface {
 	TrieDB() *trie.Database
 }
 
-// Trie is a Ethereum Merkle Trie.
+// Trie is a  Merkle Trie.
 type Trie interface {
 	TryGet(key []byte) ([]byte, error)
 	TryUpdate(key, value []byte) error

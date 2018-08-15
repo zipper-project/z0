@@ -18,6 +18,7 @@ package txpool
 
 import (
 	"math"
+	"reflect"
 
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/params"
@@ -43,34 +44,55 @@ func TxDifference(a, b types.Transactions) types.Transactions {
 }
 
 // IntrinsicGas computes the 'intrinsic gas' for a message with the given data.
-func IntrinsicGas(data []byte, contractCreation bool) (uint64, error) {
-	// Set the starting gas for the raw transaction
+func IntrinsicGas(Extra []byte, inputs, outputs []interface{}) (uint64, error) {
 	var gas uint64
-	if contractCreation {
-		gas = params.TxGasContractCreation
-	} else {
-		gas = params.TxGas
-	}
-	// Bump the required gas by the amount of transactional data
-	if len(data) > 0 {
-		// Zero and non-zero bytes are priced differently
-		var nz uint64
-		for _, byt := range data {
-			if byt != 0 {
-				nz++
+	for _, v := range outputs {
+		if reflect.TypeOf(v) == types.AMOutputType {
+			output := v.(types.AMOutput)
+			if output.Address == nil {
+				gas += params.TxGasContractCreation
+			} else {
+				gas += params.TxGas
 			}
 		}
-		// Make sure we don't exceed uint64 for all data combinations
-		if (math.MaxUint64-gas)/params.TxDataNonZeroGas < nz {
-			return 0, ErrOutOfGas
-		}
-		gas += nz * params.TxDataNonZeroGas
-
-		z := uint64(len(data)) - nz
-		if (math.MaxUint64-gas)/params.TxDataZeroGas < z {
-			return 0, ErrOutOfGas
-		}
-		gas += z * params.TxDataZeroGas
 	}
+
+	// Bump the required gas by the amount of transactional data
+	dataGasFunc := func(data []byte) (uint64, error) {
+		var gas uint64
+		if len(data) > 0 {
+			// Zero and non-zero bytes are priced differently
+			var nz uint64
+			for _, byt := range data {
+				if byt != 0 {
+					nz++
+				}
+			}
+			// Make sure we don't exceed uint64 for all data combinations
+			if (math.MaxUint64-gas)/params.TxDataNonZeroGas < nz {
+				return 0, ErrOutOfGas
+			}
+			gas += nz * params.TxDataNonZeroGas
+
+			z := uint64(len(data)) - nz
+			if (math.MaxUint64-gas)/params.TxDataZeroGas < z {
+				return 0, ErrOutOfGas
+			}
+			gas += z * params.TxDataZeroGas
+		}
+		return gas, nil
+	}
+
+	for _, v := range inputs {
+		if reflect.TypeOf(v) == types.AMInputType {
+			input := v.(types.AMInput)
+			dataGas, err := dataGasFunc(input.Payload)
+			if err != nil {
+				return 0, err
+			}
+			gas += dataGas
+		}
+	}
+
 	return gas, nil
 }

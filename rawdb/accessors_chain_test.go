@@ -21,12 +21,13 @@ import (
 	"math/big"
 	"testing"
 
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/types"
-	"github.com/zipper-project/z0/zdb"
 	"github.com/zipper-project/z0/utils/rlp"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"fmt"
+	"github.com/zipper-project/z0/utils/zdb"
 )
 
 // Tests block header storage and retrieval operations.
@@ -70,8 +71,8 @@ func TestHeaderStorage(t *testing.T) {
 // Tests block body storage and retrieval operations.
 func TestBodyStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
-	tx1 := types.NewTransaction(uint64(1), "testid", uint64(1), big.NewInt(1), []byte("testdata1"))
-	tx2 := types.NewTransaction(uint64(2), "testid", uint64(2), big.NewInt(2), []byte("testdata2"))
+	tx1 := types.NewTransaction(uint64(1), uint64(1), big.NewInt(1), []byte("testdata1"))
+	tx2 := types.NewTransaction(uint64(2), uint64(2), big.NewInt(2), []byte("testdata2"))
 	txs := types.Transactions{tx1, tx2}
 	body := &types.Body{
 		Transactions: txs,
@@ -91,7 +92,7 @@ func TestBodyStorage(t *testing.T) {
 	} else if types.DeriveSha(types.Transactions(entry.Transactions)) != types.DeriveSha(types.Transactions(body.Transactions)) {
 		t.Fatalf("Retrieved body mismatch: have %v, want %v", entry, body)
 	} else {
-		fmt.Println(string(entry.Transactions[0].Payload()), string(entry.Transactions[1].Payload()))
+		fmt.Println(string(entry.Transactions[0].Extra()), string(entry.Transactions[1].Extra()))
 	}
 	if entry := ReadBodyRLP(db, hash, 0); entry == nil {
 		t.Fatalf("Stored body RLP not found")
@@ -121,8 +122,8 @@ func TestBlockStorage(t *testing.T) {
 		ReceiptHash: common.BytesToHash([]byte("test rcpthash")),
 		Number:      big.NewInt(1),
 	}
-	tx1 := types.NewTransaction(uint64(1), "testid", uint64(1), big.NewInt(1), []byte("testdata1"))
-	tx2 := types.NewTransaction(uint64(2), "testid", uint64(2), big.NewInt(2), []byte("testdata2"))
+	tx1 := types.NewTransaction(uint64(1), uint64(1), big.NewInt(1), []byte("testdata1"))
+	tx2 := types.NewTransaction(uint64(2), uint64(2), big.NewInt(2), []byte("testdata2"))
 	txs := types.Transactions{tx1, tx2}
 	block := &types.Block{
 		Head: header,
@@ -207,10 +208,8 @@ func TestHeadStorage(t *testing.T) {
 	blockHead := &types.Block{
 		Head: &types.Header{Extra: []byte("test block header")},
 	}
-	blockFull := &types.Block{Head: &types.Header{Extra: []byte("test block full")},
-	}
-	blockFast := types.Block{Head: &types.Header{Extra: []byte("test block fast")},
-	}
+	blockFull := &types.Block{Head: &types.Header{Extra: []byte("test block full")}}
+	blockFast := types.Block{Head: &types.Header{Extra: []byte("test block fast")}}
 
 	// Check that no head entries are in a pristine database
 	if entry := ReadHeadHeaderHash(db); entry != (common.Hash{}) {
