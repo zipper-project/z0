@@ -28,9 +28,9 @@ import (
 func TestLookupStorage(t *testing.T) {
 	db := zdb.NewMemDatabase()
 
-	tx1 := types.NewTransaction(1, "assertid1", 1111, big.NewInt(11111), []byte{0x11, 0x11, 0x11})
-	tx2 := types.NewTransaction(2, "assertid2", 2222, big.NewInt(22222), []byte{0x22, 0x22, 0x22})
-	tx3 := types.NewTransaction(3, "assertid3", 3333, big.NewInt(33333), []byte{0x33, 0x33, 0x33})
+	tx1 := types.NewTransaction(1, 1111, big.NewInt(11111), []byte{0x11, 0x11, 0x11})
+	tx2 := types.NewTransaction(2, 2222, big.NewInt(22222), []byte{0x22, 0x22, 0x22})
+	tx3 := types.NewTransaction(3, 3333, big.NewInt(33333), []byte{0x33, 0x33, 0x33})
 	txs := []*types.Transaction{tx1, tx2, tx3}
 
 	block := &types.Block{

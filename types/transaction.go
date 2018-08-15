@@ -118,11 +118,15 @@ func (tx *Transaction) Extra() []byte      { return common.CopyBytes(tx.Data.Ext
 func (tx *Transaction) Gas() uint64        { return tx.Data.GasLimit }
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.Data.Price) }
 func (tx *Transaction) Nonce() uint64      { return tx.Data.Nonce }
+
 func (tx *Transaction) Value() map[common.Address]map[common.Address]*big.Int {
 	values := make(map[common.Address]map[common.Address]*big.Int)
 	for _, v := range tx.Data.Outputs {
 		if reflect.TypeOf(v) == AMOutputType {
 			output := v.(AMOutput)
+			if values[*output.Address] == nil {
+				values[*output.Address] = make(map[common.Address]*big.Int)
+			}
 			values[*output.Address][*output.AssertID] = output.Value
 		} else {
 			// todo utxo
@@ -172,17 +176,16 @@ func (tx *Transaction) GetOutputs() []interface{} {
 
 // Cost returns amount + gasprice * gaslimit.
 func (tx *Transaction) Cost() *big.Int {
-	var amount *big.Int
+	amount := big.NewInt(0)
 	for _, v := range tx.Data.Outputs {
 		if reflect.TypeOf(v) == AMOutputType {
 			output := v.(AMOutput)
 			if output.AssertID.Hex() == ZipAssetID.Hex() {
-				amount = new(big.Int).Add(amount, output.Value)
+				amount.Add(amount, output.Value)
 			}
 		}
 	}
 	total := new(big.Int).Mul(tx.Data.Price, new(big.Int).SetUint64(tx.Data.GasLimit))
-	// todo value cache
 	return total.Add(total, amount)
 }
 

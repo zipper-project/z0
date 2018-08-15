@@ -84,7 +84,7 @@ func transaction(nonce uint64, gaslimit uint64, key *ecdsa.PrivateKey) *types.Tr
 }
 
 func pricedTransaction(nonce uint64, gaslimit uint64, gasprice *big.Int, key *ecdsa.PrivateKey) *types.Transaction {
-	tx, _ := types.SignTx(types.NewTransaction(nonce, gaslimit, gasprice, nil), types.NewSigner(params.DefaultChainconfig.ChainID), key)
+	tx, _ := types.SignTx(newTx(nonce, big.NewInt(100), gaslimit, gasprice, nil), types.NewSigner(params.DefaultChainconfig.ChainID), key)
 	return tx
 }
 
@@ -190,7 +190,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 }
 
 func newTx(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *types.Transaction {
-	new := types.NewTransaction(0, gasLimit, gasPrice, data)
+	new := types.NewTransaction(nonce, gasLimit, gasPrice, data)
 	new.WithInput(types.AMInput{AssertID: &types.ZipAssetID, Payload: nil})
 	new.WithOutput(types.AMOutput{AssertID: &types.ZipAssetID, Address: &common.Address{}, Value: amount})
 	return new

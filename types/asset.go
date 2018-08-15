@@ -25,7 +25,10 @@ import (
 )
 
 var (
-	ZipAssetID = common.Address{}
+	//ZipAccount chain asset
+	ZipAssetID = common.Address{1}
+	//ZipAccount chain asset
+	ZipAccount = common.Address{2}
 )
 
 var (

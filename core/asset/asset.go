@@ -22,6 +22,7 @@ import (
 	"math/big"
 
 	"github.com/zipper-project/z0/common"
+	"github.com/zipper-project/z0/types"
 	"github.com/zipper-project/z0/utils/rlp"
 )
 
@@ -37,13 +38,6 @@ var (
 	assetType = []byte("aType")
 )
 
-var (
-	//ZIPASSET chain asset
-	ZIPASSET = common.Address{1}
-	//ZIPACCOUNT chain asset
-	ZIPACCOUNT = common.Address{2}
-)
-
 //Asset operating user assets
 type Asset struct {
 	db StateDB
@@ -56,7 +50,7 @@ func NewAsset(db StateDB) *Asset {
 
 //InitZip Genesis asset ZIP
 func InitZip(db StateDB, total *big.Int, decimals uint64) error {
-	asset := db.GetAccount(ZIPASSET, ZIPASSET.String())
+	asset := db.GetAccount(types.ZipAssetID, types.ZipAssetID.String())
 	if !bytes.Equal(asset, []byte{}) {
 		return nil
 	}
@@ -65,14 +59,14 @@ func InitZip(db StateDB, total *big.Int, decimals uint64) error {
 		Symbol:   "ZIP",
 		Total:    total,
 		Decimals: decimals,
-		Owner:    ZIPACCOUNT}
+		Owner:    types.ZipAccount}
 	//save zip asset info
 	b := new(bytes.Buffer)
 	err := rlp.Encode(b, &info)
 	if err != nil {
 		return err
 	}
-	assetAddr := ZIPASSET
+	assetAddr := types.ZipAssetID
 	db.SetAccount(assetAddr, assetAddr.String(), b.Bytes())
 
 	//save base type
@@ -307,8 +301,6 @@ func (a *Asset) GetNonce(targetAddr common.Address) uint64 {
 		if err != nil {
 			panic("GetNonce error")
 		}
-	} else {
-		panic("GetNonce error")
 	}
 	return account.Nonce
 }

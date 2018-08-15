@@ -617,7 +617,6 @@ func (tp *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.Tra
 	// Set the potentially new pending nonce and notify any subsystems of the new tx
 	tp.beats[addr] = time.Now()
 	tp.pendingAsset.SetNonce(addr, tx.Nonce()+1)
-
 	return true
 }
 

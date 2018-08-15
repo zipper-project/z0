@@ -90,7 +90,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Zcnd, error) {
 	}
 
 	// todo add blockchian
-	zcnd.txPool = txpool.New(config.TxPool, zcnd.chainConfig, zcnd.blockchain)
+	zcnd.txPool = txpool.New(*config.TxPool, zcnd.chainConfig, zcnd.blockchain)
 
 	return zcnd, nil
 }

@@ -25,8 +25,8 @@ import (
 var (
 	addr     = common.HexToAddress("0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed")
 	assertID = common.HexToAddress("0xcc8507ed53e44c9d86a158e876c151634247f514")
-	amInput  = AMInput{AssertID: assertID, Payload: []byte("payload")}
-	amOutput = AMOutput{AssertID: assertID, Address: addr, Value: big.NewInt(10000)}
+	amInput  = AMInput{AssertID: &assertID, Payload: []byte("payload")}
+	amOutput = AMOutput{AssertID: &assertID, Address: &addr, Value: big.NewInt(10000)}
 
 	testTx = NewTransaction(
 		3,

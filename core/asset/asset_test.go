@@ -23,6 +23,7 @@ import (
 
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/state"
+	"github.com/zipper-project/z0/types"
 	"github.com/zipper-project/z0/utils/zdb"
 )
 
@@ -164,11 +165,11 @@ func TestGeneralAsset(t *testing.T) {
 		t.Errorf("Unexpected error : %v", err)
 	}
 
-	err = asset.SubBalance(ZIPACCOUNT, ZIPASSET, big.NewInt(1))
+	err = asset.SubBalance(types.ZipAccount, types.ZipAssetID, big.NewInt(1))
 	if err != nil {
 		t.Errorf("Unexpected error : %v", err)
 	}
-	v = asset.GetBalance(ZIPACCOUNT, ZIPASSET)
+	v = asset.GetBalance(types.ZipAccount, types.ZipAssetID)
 	if err != nil {
 		t.Errorf("Unexpected error : %v", err)
 	}
@@ -176,7 +177,7 @@ func TestGeneralAsset(t *testing.T) {
 	if value.Cmp(big.NewInt(999)) != 0 {
 		t.Errorf("balace error 999")
 	}
-	_, err = asset.GetUserAssets(ZIPACCOUNT)
+	_, err = asset.GetUserAssets(types.ZipAccount)
 	if err != nil {
 		t.Errorf("Unexpected error : %v", err)
 	}

@@ -30,7 +30,6 @@ import (
 	"github.com/zipper-project/z0/common"
 	"github.com/zipper-project/z0/consensus"
 	"github.com/zipper-project/z0/core/vm"
-	"github.com/zipper-project/z0/crypto"
 	event "github.com/zipper-project/z0/feed"
 	"github.com/zipper-project/z0/params"
 	"github.com/zipper-project/z0/rawdb"
@@ -54,18 +53,6 @@ const (
 
 // BlockChain represents the canonical chain given a database with a genesis
 // block. The Blockchain manages chain imports, reverts, chain reorganisations.
-//
-// Importing blocks in to the block chain happens according to the set of rules
-// defined by the two stage Validator. Processing of blocks is done using the
-// Processor which processes the included transaction. The validation of the state
-// is done in the second part of the Validator. Failing results in aborting of
-// the import.
-//
-// The BlockChain also helps in returning blocks from **any** chain included
-// in the database as well as blocks that represents the canonical chain. It's
-// important to note that GetBlock can return any block and does not need to be
-// included in the canonical one where as GetBlockByNumber always represents the
-// canonical chain.
 type BlockChain struct {
 	chainConfig *params.ChainConfig // Chain & network configuration
 	cacheConfig *CacheConfig        // Cache configuration for pruning
@@ -575,11 +562,6 @@ func (bc *BlockChain) Stop() {
 
 	bc.wg.Wait()
 
-	// Ensure the state of a recent block is also stored to disk before exiting.
-	// We're writing three different states to catch different restart scenarios:
-	//  - HEAD:     So we don't need to reprocess any blocks in the general case
-	//  - HEAD-1:   So we don't do large reorgs if our HEAD becomes an uncle
-	//  - HEAD-127: So we have a hard limit on the number of blocks reexecuted
 	if !bc.cacheConfig.Disabled {
 		triedb := bc.stateCache.TrieDB()
 
@@ -657,7 +639,7 @@ func (bc *BlockChain) Rollback(chain []common.Hash) {
 
 // SetReceiptsData computes all the non-consensus fields of the receipts
 func SetReceiptsData(config *params.ChainConfig, block *types.Block, receipts types.Receipts) error {
-	signer := types.MakeSigner(config.ChainID)
+	// signer := types.MakeSigner(config.ChainID)
 
 	transactions, logIndex := block.Txs, uint(0)
 	if len(transactions) != len(receipts) {
@@ -669,11 +651,11 @@ func SetReceiptsData(config *params.ChainConfig, block *types.Block, receipts ty
 		receipts[j].TxHash = transactions[j].Hash()
 
 		// The contract address can be derived from the transaction itself
-		if transactions[j].To() == nil {
-			// Deriving the signer is expensive, only do if it's actually needed
-			from, _ := types.Sender(signer, transactions[j])
-			receipts[j].ContractAddress = crypto.CreateAddress(from, transactions[j].Nonce())
-		}
+		// if transactions[j].To() == nil {
+		// 	// Deriving the signer is expensive, only do if it's actually needed
+		// 	from, _ := types.Sender(signer, transactions[j])
+		// 	receipts[j].ContractAddress = crypto.CreateAddress(from, transactions[j].Nonce())
+		// }
 		// The used gas can be calculated based on previous receipts
 		if j == 0 {
 			receipts[j].GasUsed = receipts[j].CumulativeGasUsed
