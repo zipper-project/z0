@@ -37,6 +37,13 @@ var (
 	assetType = []byte("aType")
 )
 
+var (
+	//ZIPASSET chain asset
+	ZIPASSET = common.Address{1}
+	//ZIPACCOUNT chain asset
+	ZIPACCOUNT = common.Address{2}
+)
+
 //Asset operating user assets
 type Asset struct {
 	db StateDB
@@ -45,6 +52,50 @@ type Asset struct {
 //NewAsset create Asset
 func NewAsset(db StateDB) *Asset {
 	return &Asset{db}
+}
+
+//InitZip Genesis asset ZIP
+func InitZip(db StateDB, total *big.Int, decimals uint64) error {
+	asset := db.GetAccount(ZIPASSET, ZIPASSET.String())
+	if !bytes.Equal(asset, []byte{}) {
+		return nil
+	}
+	info := &AccountAssetInfo{
+		Name:     "zipper",
+		Symbol:   "ZIP",
+		Total:    total,
+		Decimals: decimals,
+		Owner:    ZIPACCOUNT}
+	//save zip asset info
+	b := new(bytes.Buffer)
+	err := rlp.Encode(b, &info)
+	if err != nil {
+		return err
+	}
+	assetAddr := ZIPASSET
+	db.SetAccount(assetAddr, assetAddr.String(), b.Bytes())
+
+	//save base type
+	assetTypeKey := assetAddr.String() + string(assetType)
+	b = new(bytes.Buffer)
+	err = rlp.Encode(b, uint64(AccountModel))
+	if err != nil {
+		return err
+	}
+	db.SetAccount(assetAddr, assetTypeKey, b.Bytes())
+	//issue balance to owner
+	err = setAccountList(AccountModel, db, info.Owner, assetAddr)
+	if err != nil {
+		return err
+	}
+	key := info.Owner.String() + assetAddr.String()
+	b = new(bytes.Buffer)
+	err = rlp.Encode(b, info.Total)
+	if err != nil {
+		return err
+	}
+	db.SetAccount(info.Owner, key, b.Bytes())
+	return nil
 }
 
 // RegisterAsset create asset

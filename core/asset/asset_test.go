@@ -18,7 +18,6 @@ package asset
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -32,7 +31,7 @@ func TestGeneralAsset(t *testing.T) {
 	tridb := state.NewDatabase(db)
 	statedb, err := state.New(common.Hash{}, tridb)
 
-	account1 := common.Address{1}
+	account1 := common.Address{10}
 	account100 := common.Address{100}
 	if err != nil {
 		t.Errorf("Unexpected error : %v", err)
@@ -70,11 +69,11 @@ func TestGeneralAsset(t *testing.T) {
 		t.Errorf("balace error 2120")
 	}
 
-	assets, err := asset.GetUserAssets(account100)
+	_, err = asset.GetUserAssets(account100)
 	if err != nil {
 		t.Errorf("Unexpected error : %v", err)
 	}
-	fmt.Printf("type:%v address:%v name:%v balance:%v\n", assets[0].baseType, assets[0].assetAddr, assets[0].assetName, assets[0].balance)
+	// fmt.Printf("type:%v address:%v name:%v balance:%v\n", assets[0].baseType, assets[0].assetAddr, assets[0].assetName, assets[0].balance)
 	// if strings.Compare(aAddress.String(), list[0].String()) != 0 {
 	// 	t.Errorf("GetAccountList error ")
 	// }
@@ -159,4 +158,27 @@ func TestGeneralAsset(t *testing.T) {
 		t.Errorf("Empty error ")
 	}
 	// fmt.Printf("Exist:%v\n", boo)
+
+	InitZip(statedb, big.NewInt(1000), 8)
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+
+	err = asset.SubBalance(ZIPACCOUNT, ZIPASSET, big.NewInt(1))
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	v = asset.GetBalance(ZIPACCOUNT, ZIPASSET)
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	value = v.(*big.Int)
+	if value.Cmp(big.NewInt(999)) != 0 {
+		t.Errorf("balace error 999")
+	}
+	_, err = asset.GetUserAssets(ZIPACCOUNT)
+	if err != nil {
+		t.Errorf("Unexpected error : %v", err)
+	}
+	// fmt.Printf("type:%v address:%v name:%v balance:%v\n", assets[0].baseType, assets[0].assetAddr, assets[0].assetName, assets[0].balance)
 }
