@@ -115,6 +115,7 @@ func New(config Config, chainconfig *params.ChainConfig, bc blockChain) *TxPool 
 			log.Warn("Failed to rotate transaction journal", "err", err)
 		}
 	}
+
 	// Subscribe feeds from blockchain
 	tp.chainHeadSub = tp.chain.SubscribeChainHeadEvent(tp.chainHeadCh)
 
