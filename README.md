@@ -1,7 +1,7 @@
 # Z0-Global Leading High-performance Ledger
 
-[![Build Status](https://travis-ci.com/bochentec/z0.svg?token=tyVx37nJjxtyv5pnQtaA&branch=master)](https://travis-ci.com/bochentec/z0)
-[![GoDoc](https://godoc.org/github.com/bochentec/z0?status.svg)](https://godoc.org/github.com/bochentec/z0)
+[![Build Status](https://travis-ci.org/zipper-project/z0.svg?branch=master)](https://travis-ci.org/zipper-project/z0)
+[![GoDoc](https://godoc.org/github.com/zipper-project/z0?status.svg)](https://godoc.org/github.com/zipper-project/z0)
 
 
 **Do you work at a digital asset exchange or wallet provider or financial institutions ?** 
